@@ -3,7 +3,7 @@
 `recsys-streaming` imitates fragment of a real-world recommender system using PyTorch for modeling, Kafka for streaming data, Spark for data processing, and MongoDB for data storage. The system exposes its functionalities as a FastAPI service, enabling easy interaction with the recommender system.
 
 # Components
-- PyTorch: Model serving recommendations based on `Criteo` dataset
+- PyTorch: Model serving recommendations based on `Amazon Reviews'23` dataset
 
 - Kafka Streaming: The system consumes batch data from one Kafka topic and can retrain itself using data from another Kafka topic.
 
@@ -16,7 +16,7 @@
 - FastAPI: REST API
 
 # Dataset
-The project utilizes the Criteo dataset, which can be found [here](https://paperswithcode.com/dataset/criteo). For the sake of experiments data has been divided in parts to create basis for training and data streaming tasks.
+The project utilizes the Amazon Reviews'23 dataset, which can be found [here](https://amazon-reviews-2023.github.io/). For the sake of experiments data has been divided in parts to create basis for training and data streaming tasks.
 
 # Usage
 
