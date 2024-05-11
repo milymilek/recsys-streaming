@@ -1,0 +1,1 @@
+MODEL_URI_PATH = "C:/Users/Milosz/Projects/recsys-streaming/recsys-streaming-ml/.runs/DeepFM/2024-05-11_15-29-20/model.pt"
