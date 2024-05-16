@@ -1,11 +1,13 @@
 import pathlib
 from datetime import datetime
+import io
 
 import pandas as pd
 import torch
 import matplotlib.pyplot as plt
 
 from recsys_streaming_ml.config import RUNS_DIR
+from recsys_streaming_ml.db import client
 
 
 def collate_fn(batch):
@@ -60,8 +62,13 @@ def plot_and_save(history: dict[str, list], save_path: pathlib.Path):
 
 
 def dump_model(model, save_path: pathlib.Path):
-    save_path_file = save_path / "model.pth"
-    torch.save(model.state_dict(), save_path_file)
+    model_scripted = torch.jit.script(model.to('cpu')) # Export to TorchScript
+
+    buffer = io.BytesIO()
+    torch.jit.save(model_scripted, buffer)
+    buffer.seek(0)
+
+    client['model_versions'].insert_one({"model": model.__class__.__name__, "timestamp": datetime.now(), "binary": buffer.read()})
 
 
 def save_history(history: dict[str, list], save_path: pathlib.Path):

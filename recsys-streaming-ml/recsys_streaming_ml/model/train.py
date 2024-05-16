@@ -166,7 +166,7 @@ def parse_args():
     p.add_argument("-c", "--cuda", default=False, type=bool, help="use cuda to train")
     p.add_argument("-s", "--seed", default=42, type=int)
 
-    return p.parse_args()
+    return p.parse_known_args()[0]
 
 
 def run():

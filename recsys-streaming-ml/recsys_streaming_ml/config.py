@@ -20,3 +20,10 @@ FEATURE_MAPS_FILE = DATA_DIR / "feature_maps"
 
 # train
 RUNS_DIR = pathlib.Path(".runs")
+
+# db
+MONGODB_HOST = os.getenv("MONGODB_HOST", default="localhost")
+MONGODB_PORT = 27017
+MONGODB_AUTHSOURCE = "admin"
+MONGODB_USERNAME = "root"
+MONGODB_PASSWORD = "root"

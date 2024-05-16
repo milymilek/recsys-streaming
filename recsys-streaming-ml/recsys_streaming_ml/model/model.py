@@ -42,7 +42,7 @@ class EmbeddingNet(nn.Module):
             x_feat = x[:, int(i)].to(torch.long)
             emb = embed_matrix(x_feat)
             x_emb.append(emb)
-        x_emb = torch.cat(x_emb, axis=1)
+        x_emb = torch.cat(x_emb, dim=1)
         return x_emb
     
 
