@@ -23,6 +23,10 @@ services:
       MONGODB_HOST: "mongo"
       DOWNLOAD_DATA_URL: "https://datarepo.eng.ucsd.edu/mcauley_group/data/amazon_2023/raw/review_categories/Handmade_Products.jsonl.gz"
       DOWNLOAD_METADATA_URL: "https://datarepo.eng.ucsd.edu/mcauley_group/data/amazon_2023/raw/meta_categories/meta_Handmade_Products.jsonl.gz"
+    volumes:
+      - ./recsys-streaming-ml/recsys_streaming_ml:/app/recsys_streaming_ml
+    networks:
+      - kafka_network
   
   mongo:
     image: mongo:latest
@@ -35,4 +39,42 @@ services:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: root
       MONGO_INITDB_DATABASE: database
+      
+  zookeeper:
+    container_name: zookeeper
+    image: confluentinc/cp-zookeeper:7.4.4
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - 22181:2181
+    networks:
+      - kafka_network
 
+  kafka:
+    container_name: kafka
+    image: confluentinc/cp-kafka:7.4.4
+    ports:
+      - 29092:29092
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    depends_on:
+      - zookeeper
+    networks:
+      - kafka_network
+    command: >
+      sh -c "
+      /etc/confluent/docker/run &
+      sleep 40 &&
+      kafka-topics --create --topic user_activity --bootstrap-server kafka:9092 --partitions 1 --replication-factor 1 &&
+      kafka-topics --describe --topic user_activity --bootstrap-server kafka:9092
+      "
+
+networks:
+  kafka_network:
+    driver: bridge
