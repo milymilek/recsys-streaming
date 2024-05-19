@@ -27,3 +27,8 @@ MONGODB_PORT = 27017
 MONGODB_AUTHSOURCE = "admin"
 MONGODB_USERNAME = "root"
 MONGODB_PASSWORD = "root"
+
+# kafka
+KAFKA_BROKER_URL = "localhost:9092"
+RECOMMENDATIONS_TOPIC = "recommendations"
+USER_ACTIONS_TOPIC = "users.actions"
