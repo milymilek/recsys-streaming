@@ -4,10 +4,11 @@ import time
 import pandas as pd
 from kafka import KafkaProducer
 
-from config import REVIEWS_TOPIC, BOOTSTRAP_KAFKA_SERVER, MOCK_DATA_PATH
+from config import RECOMMENDATIONS_TOPIC, BOOTSTRAP_KAFKA_SERVER, MOCK_DATA_PATH
 
-print(REVIEWS_TOPIC)
+print(RECOMMENDATIONS_TOPIC)
 print(BOOTSTRAP_KAFKA_SERVER)
+
 
 def wait_for_kafka(bootstrap_servers):
     users_actions_producer = None
@@ -24,12 +25,13 @@ def wait_for_kafka(bootstrap_servers):
 mock_data = pd.read_json(MOCK_DATA_PATH, lines=True)
 producer = wait_for_kafka(BOOTSTRAP_KAFKA_SERVER)
 
+
 def generate_and_send_messages():
     while True:
         message = mock_data.sample()
         message_dict = message.to_dict(orient='records')[0]
         message_json = json.dumps(message_dict).encode('utf-8')
-        producer.send(REVIEWS_TOPIC, value=message_json)
+        producer.send(RECOMMENDATIONS_TOPIC, value=message_json)
         producer.flush()
         print(f"Sent message: {message}")
         time.sleep(5)

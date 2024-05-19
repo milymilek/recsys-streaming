@@ -16,7 +16,7 @@ services:
       - "9093:9093"
     environment:
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_CREATE_TOPICS: "users.actions:1:1"
+      KAFKA_CREATE_TOPICS: "users.actions:1:1,recommendations:1:1"
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INSIDE:PLAINTEXT,OUTSIDE:PLAINTEXT
       KAFKA_LISTENERS: INSIDE://:9093,OUTSIDE://:9092
       KAFKA_ADVERTISED_LISTENERS: INSIDE://kafka0:9093,OUTSIDE://localhost:9092
@@ -28,6 +28,11 @@ services:
 
   mock-user-actions-producer:
     build: mock-user-actions-producer/
+    networks:
+      - app_network
+
+  mock-recommendations-producer:
+    build: mock-recommendations-producer/
     networks:
       - app_network
 
