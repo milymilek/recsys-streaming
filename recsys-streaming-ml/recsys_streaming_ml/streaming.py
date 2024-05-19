@@ -1,52 +1,70 @@
+from pyspark.ml.functions import predict_batch_udf
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import col
+from pyspark.sql.functions import col, from_json, struct, array
+from pyspark.sql.types import StructType, StructField, StringType, ArrayType, FloatType, Union, Dict
 
-# spark_jars = ("{},{},{},{},{}".format("../jars/commons-pool2-2.12.0.jar",
-#                                     "../jars/kafka-clients-3.7.0.jar",
-#                                     "../jars/spark-sql-kafka-0-10_2.12-3.5.1.jar",
-#                                     "../jars/spark-streaming-kafka-0-10_2.12-3.5.1.jar",
-#                                     "../jars/spark-token-provider-kafka-0-10_2.12-3.5.1.jar"))
 
-# # Initialize a SparkSession
-# spark = SparkSession \
-#     .builder \
-#     .config("spark.jars", spark_jars) \
-#     .appName("KafkaStructuredStreamingExample") \
-#     .getOrCreate()
+KAFKA_BROKER_URL = "kafka0:9093"
+RECOMMENDATIONS_TOPIC = "recommendations"
+USER_ACTIONS_TOPIC = "users.actions"
 
-spark = SparkSession \
-    .builder \
-    .appName("Streaming from Kafka") \
-    .config("spark.streaming.stopGracefullyOnShutdown", True) \
-    .config('spark.jars.packages', 'org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.1') \
-    .config("spark.sql.shuffle.partitions", 4) \
-    .master("local[*]") \
-    .getOrCreate()
 
-# Define Kafka parameters
-kafka_bootstrap_servers = "kafka:9092"
-kafka_topic = "user_activity"
+def predict_batch_fn():
+    # load model from checkpoint
+    import torch    
+    device = torch.device("cuda")
+    model = Net().to(device)
+    checkpoint = load_checkpoint(checkpoint_dir)
+    model.load_state_dict(checkpoint['model'])
 
-# Read messages from Kafka
-df = spark \
-    .readStream \
-    .format("kafka") \
-    .option("kafka.bootstrap.servers", kafka_bootstrap_servers) \
-    .option("subscribe", kafka_topic) \
-    .load()
+    # define predict function in terms of numpy arrays
+    def predict(inputs: np.ndarray) -> np.ndarray:
+        torch_inputs = torch.from_numpy(inputs).to(device)
+        outputs = model(torch_inputs)
+        return outputs.cpu().detach().numpy()
+    
+    return predict
 
-# Select the key and value columns and cast them to strings
-kafka_df = df.selectExpr("CAST(key AS STRING)", "CAST(value AS STRING)")
 
-# Print the schema of the incoming data
-kafka_df.printSchema()
+def main():
+    spark = SparkSession.builder \
+        .appName("KafkaRead") \
+        .master("local[*]") \
+        .config("spark.jars.packages", "org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.1") \
+        .getOrCreate()
 
-# Define the query that writes the streaming data to the console
-query = kafka_df \
-    .writeStream \
-    .outputMode("append") \
-    .format("console") \
-    .start()
+    schema = StructType([
+        StructField("user_id", StringType(), True)
+    ])
 
-# Wait for the termination signal from the user
-query.awaitTermination()
+    df = spark.readStream \
+        .format("kafka") \
+        .option("kafka.bootstrap.servers", KAFKA_BROKER_URL) \
+        .option("subscribe", RECOMMENDATIONS_TOPIC) \
+        .option("startingOffsets", "latest") \
+        .load()
+
+    df_parsed = df.selectExpr("CAST(value AS STRING) as json_value") \
+        .select(from_json(col("json_value"), schema).alias("data")) \
+        .select("data.*")
+
+    # create standard PandasUDF from predict function
+    make_recommendations = predict_batch_udf(predict_batch_fn,
+                            input_tensor_shapes=[[1,28,28]],
+                            return_type=ArrayType(FloatType()),
+                            batch_size=1000)
+
+    df = spark.read.parquet("/path/to/test/data")
+    preds = df.withColumn("preds", mnist('data')).collect()
+
+    query = df_parsed.writeStream \
+        .outputMode("append") \
+        .format("console") \
+        #.trigger(processingTime='15 seconds') \
+        .start()
+
+    query.awaitTermination()
+
+
+if __name__ == "__main__":
+    main()

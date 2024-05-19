@@ -32,6 +32,8 @@ RUN apt-get update && \
     apt-get install -y openjdk-11-jdk && \
     apt-get clean;
 
+RUN apt-get install telnet -y;
+
 # install Spark
 RUN curl https://dlcdn.apache.org/spark/spark-3.5.1/spark-3.5.1-bin-hadoop3.tgz -o spark-3.5.1-bin-hadoop3.tgz \
     && tar xvzf spark-3.5.1-bin-hadoop3.tgz --directory ${SPARK_HOME} --strip-components 1 \
@@ -42,7 +44,6 @@ COPY --from=builder ${VIRTUAL_ENV} ${VIRTUAL_ENV}
 WORKDIR /app
 
 COPY recsys_streaming_ml ./recsys_streaming_ml
-COPY jars/* ./jars/*
 COPY run.py ./run.py
 
 # Suspend container so other tasks can run commands on the environment
