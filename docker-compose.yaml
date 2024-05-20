@@ -23,6 +23,10 @@ services:
       MONGODB_HOST: "mongo"
       DOWNLOAD_DATA_URL: "https://datarepo.eng.ucsd.edu/mcauley_group/data/amazon_2023/raw/review_categories/Handmade_Products.jsonl.gz"
       DOWNLOAD_METADATA_URL: "https://datarepo.eng.ucsd.edu/mcauley_group/data/amazon_2023/raw/meta_categories/meta_Handmade_Products.jsonl.gz"
+    volumes:
+      - ./recsys-streaming-ml/recsys_streaming_ml:/app/recsys_streaming_ml
+    networks:
+      - kafka_network
   
   mongo:
     image: mongo:latest
@@ -36,3 +40,6 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: root
       MONGO_INITDB_DATABASE: database
 
+networks:
+  kafka_network:
+    external: true

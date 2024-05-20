@@ -1,0 +1,15 @@
+[tool.poetry]
+name = "mock-recommendations-producer"
+version = "0.0.0"
+description = "Mock recommendations producer"
+authors = ["Milosz <milosz.hanczyk01@gmail.com>", "Krzysztof <marianpazdzioch@xd.pl>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "3.10.*"
+pandas = "2.1.1"
+kafka-python = "^2.0.2"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

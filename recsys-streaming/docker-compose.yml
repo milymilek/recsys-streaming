@@ -1,14 +1,18 @@
 version: '2'
 services:
   zookeeper:
+    container_name: zookeeper
     image: wurstmeister/zookeeper
     ports:
       - "2181:2181"
     networks:
-      - app_network
+      - kafka_network
 
   kafka0:
-    build: kafka-docker/
+    container_name: kafka0
+    #build: kafka-docker/
+    #image: wurstmeister/kafka:latest
+    image: confluentinc/cp-kafka:7.4.4
     depends_on:
       - zookeeper
     ports:
@@ -24,18 +28,32 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     networks:
-      - app_network
+      - kafka_network
 
   mock-user-actions-producer:
-    build: mock-user-actions-producer/
+    build:
+      context: mock-producers/
+      dockerfile: Dockerfile
+    environment:
+      - TOPIC=user.actions
+      - BOOTSTRAP_KAFKA_SERVER=kafka0:9093
+      - MOCK_DATA_PATH=/app/mock_data/users_actions.jsonl
+      - SEND_INTERVAL=5
     networks:
-      - app_network
+      - kafka_network
 
   mock-recommendations-producer:
-    build: mock-recommendations-producer/
+    build:
+      context: mock-producers
+      dockerfile: Dockerfile
+    environment:
+      - TOPIC=recommendations
+      - BOOTSTRAP_KAFKA_SERVER=kafka0:9093
+      - MOCK_DATA_PATH=/app/mock_data/users_ids.jsonl
+      - SEND_INTERVAL=5
     networks:
-      - app_network
+      - kafka_network
 
 networks:
-  app_network:
+  kafka_network:
     driver: bridge
