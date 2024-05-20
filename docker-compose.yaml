@@ -26,7 +26,7 @@ services:
     volumes:
       - ./recsys-streaming-ml/recsys_streaming_ml:/app/recsys_streaming_ml
     networks:
-      - app_network
+      - kafka_network
   
   mongo:
     image: mongo:latest
@@ -41,5 +41,5 @@ services:
       MONGO_INITDB_DATABASE: database
 
 networks:
-  app_network:
+  kafka_network:
     external: true
