@@ -169,6 +169,12 @@ def parse_args():
     return p.parse_known_args()[0]
 
 
+def train_placeholer(users_actions_df, batch_id):
+    if not users_actions_df.isEmpty():
+        print(f"Showing data for batch: {batch_id}")
+        users_actions_df.show()
+
+
 def run():
     print("SCRIPT: Train model - START")
 

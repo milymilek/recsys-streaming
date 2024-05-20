@@ -10,8 +10,7 @@ services:
 
   kafka0:
     container_name: kafka0
-    #build: kafka-docker/
-    #image: wurstmeister/kafka:latest
+    build: kafka/
     image: confluentinc/cp-kafka:7.4.4
     depends_on:
       - zookeeper
@@ -35,7 +34,7 @@ services:
       context: mock-producers/
       dockerfile: Dockerfile
     environment:
-      - TOPIC=user.actions
+      - TOPIC=users.actions
       - BOOTSTRAP_KAFKA_SERVER=kafka0:9093
       - MOCK_DATA_PATH=/app/mock_data/users_actions.jsonl
       - SEND_INTERVAL=5
