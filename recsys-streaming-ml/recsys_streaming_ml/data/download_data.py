@@ -12,6 +12,7 @@ from recsys_streaming_ml.config import (DOWNLOAD_DATA_URL,
 
 def _download_data(url: str, filepath: pathlib.Path) -> None:
     response = requests.get(url)
+    filepath.mkdir(exist_ok=True, parents=True)
 
     with open(filepath.with_suffix(".gz"), 'wb') as f:
         f.write(response.content)

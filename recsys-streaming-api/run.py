@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 
-from api.engine import recommendation_router
+from recsys_streaming_api.engine import recommendation_router
 
 
 app = FastAPI() 

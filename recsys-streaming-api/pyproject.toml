@@ -8,8 +8,9 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "3.10.*"
 fastapi = "^0.111.0"
-torch = "^2.3.0"
+torch = { url = "https://download.pytorch.org/whl/cpu-cxx11-abi/torch-2.3.0%2Bcpu.cxx11.abi-cp310-cp310-linux_x86_64.whl#sha256=896e8a82f441ff8ae5c8acd2fddd48d9ae1f2738fb8c083b912debbbe09c553b" }#"^2.3.0"
 python-dotenv = "^1.0.1"
+pymongo = "^4.7.2"
 
 [build-system]
 requires = ["poetry-core"]
