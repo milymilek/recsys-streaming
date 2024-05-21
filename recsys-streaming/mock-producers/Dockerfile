@@ -29,5 +29,5 @@ WORKDIR /app
 COPY mock_data ./mock_data
 COPY run.py ./run.py
 
-CMD ["python", "-m", "run"]
+ENTRYPOINT ["python", "run.py"]
 #CMD ["sleep", "infinity"]

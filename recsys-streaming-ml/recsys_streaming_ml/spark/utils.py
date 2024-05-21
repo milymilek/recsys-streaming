@@ -21,5 +21,18 @@ def spark():
 
 
         # .config("spark.executor.memory", "4g") \
+
+def spark_structured_streaming():
+    """
+    Create a SparkSession with Structured Streaming support.
+    """
+    _set_spark_envs()
+
+    spark = SparkSession.builder \
+        .appName("KafkaRead") \
+        .master("local[*]") \
+        .config("spark.jars.packages", "org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.1") \
+        .getOrCreate()
+    return spark
         
 

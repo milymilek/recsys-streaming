@@ -2,23 +2,20 @@ from pyspark.sql import SparkSession
 from pyspark.sql.functions import from_json
 from pyspark.sql.types import StructType, StructField, StringType
 
+from recsys_streaming_ml.spark.utils import spark_structured_streaming
 from recsys_streaming_ml.config import KAFKA_BROKER_URL, USER_ACTIONS_TOPIC, TRAINING_OFFSET
 from recsys_streaming_ml.model.train import train_placeholer
 
 
-def start_streaming():
-    spark = SparkSession.builder \
-        .appName("KafkaRead") \
-        .master("local[*]") \
-        .config("spark.jars.packages", "org.apache.spark:spark-sql-kafka-0-10_2.12:3.1.1") \
-        .getOrCreate()
+def main():
+    session: SparkSession = spark_structured_streaming()
 
     schema = StructType([
         StructField("asin", StringType(), True),
         StructField("user_id", StringType(), True)
     ])
 
-    df = spark \
+    df = session \
         .readStream \
         .format("kafka") \
         .option("kafka.bootstrap.servers", KAFKA_BROKER_URL) \
@@ -35,3 +32,7 @@ def start_streaming():
         .start()
 
     query.awaitTermination()
+
+
+if __name__ == "__main__":
+    main()

@@ -38,6 +38,8 @@ services:
       - BOOTSTRAP_KAFKA_SERVER=kafka0:9093
       - MOCK_DATA_PATH=/app/mock_data/users_actions.jsonl
       - SEND_INTERVAL=5
+    depends_on:
+      - kafka0
     networks:
       - kafka_network
 
@@ -50,6 +52,8 @@ services:
       - BOOTSTRAP_KAFKA_SERVER=kafka0:9093
       - MOCK_DATA_PATH=/app/mock_data/users_ids.jsonl
       - SEND_INTERVAL=5
+    depends_on:
+      - kafka0
     networks:
       - kafka_network
 
