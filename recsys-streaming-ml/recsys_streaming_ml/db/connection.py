@@ -30,7 +30,4 @@ def mongo_client(*args, **kwargs):
     except Exception:
         print("[MONGO] Connection failed")
 
-client = mongo_client()
-
-#client['model_versions'].insert_many([{"model_name": "deepfm1", "file": b"123456"}])
-#print(list(client['model_versions'].aggregate([{"$match": {}}])))
+mongo_db = mongo_client()

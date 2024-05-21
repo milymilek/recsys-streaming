@@ -1,13 +1,15 @@
 import pathlib
 from datetime import datetime
 import io
+from pymongo.database import Database
 
+import numpy as np
 import pandas as pd
 import torch
 import matplotlib.pyplot as plt
 
-from recsys_streaming_ml.config import RUNS_DIR
-from recsys_streaming_ml.db import client
+from recsys_streaming_ml.db import read_latest_model_version_document
+from recsys_streaming_ml.config import RUNS_DIR, DATASET_FILE
 
 
 def collate_fn(batch):
@@ -30,6 +32,10 @@ def neg_sampling(X, y, k=1, item_cols_idx=[1,2]):
 
 def cast_df_to_tensor(*args):
     return (torch.Tensor(a.values) for a in args)
+
+
+def build_input_tensor(inputs: np.ndarray) -> torch.Tensor:
+    return torch.tensor(inputs, dtype=torch.long)
 
 
 def binarize_target(target: torch.Tensor, threshold: float): 
@@ -61,18 +67,55 @@ def plot_and_save(history: dict[str, list], save_path: pathlib.Path):
     plt.savefig(save_path_file)
 
 
-def dump_model(model, save_path: pathlib.Path):
+def _get_new_model_version(db: Database) -> int:
+    latest_version = read_latest_model_version_document(db)
+
+    if not latest_version:
+        return 0
+    
+    return int(latest_version['version']) + 1
+
+
+def _get_model_buffer(db: Database) -> io.BytesIO:
+    latest_version = read_latest_model_version_document(db)
+
+    if not latest_version:
+        raise ValueError("Model not found in database!")
+
+    return io.BytesIO(latest_version["binary"])
+
+
+def dump_model(db: Database, model, save_path: pathlib.Path):
     model_scripted = torch.jit.script(model.to('cpu')) # Export to TorchScript
 
     buffer = io.BytesIO()
     torch.jit.save(model_scripted, buffer)
     buffer.seek(0)
 
-    client['model_versions'].insert_one({"model": model.__class__.__name__, "timestamp": datetime.now(), "binary": buffer.read()})
+    model_version = _get_new_model_version(db)
+    db['model_versions'].insert_one({"model": model.__class__.__name__, "timestamp": datetime.now(), "binary": buffer.read(), "version": model_version})
+
+
+def load_model_from_db(db: Database, device: str = 'cpu'):
+    model_document = read_latest_model_version_document(db)
+    model_version = _get_new_model_version(db)
+    model_buffer = _get_model_buffer(db)
+
+    print(f'Loading model: {model_document["model"]}:v{model_version}-{model_document["timestamp"]}')
+    model = torch.jit.load(model_buffer, map_location=device)
+    return model
 
 
 def save_history(history: dict[str, list], save_path: pathlib.Path):
     save_path_file = save_path / "history.xlsx"
     pd.DataFrame(history).to_excel(save_path_file)
 
+
+def load_dataset(dataset_path: pathlib.Path = DATASET_FILE):
+    return {
+        "train_data": pd.read_csv(DATASET_FILE / "train_data.csv"),
+        "train_targets": pd.read_csv(DATASET_FILE / "train_targets.csv"),
+        "valid_data": pd.read_csv(DATASET_FILE / "valid_data.csv"),
+        "valid_targets": pd.read_csv(DATASET_FILE / "valid_targets.csv"),
+    }
 

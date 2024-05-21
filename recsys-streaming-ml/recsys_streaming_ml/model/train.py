@@ -14,9 +14,10 @@ from recsys_streaming_ml.model.model import DeepFM
 from recsys_streaming_ml.config import DATASET_FILE
 from recsys_streaming_ml.model.utils import (
     collate_fn, neg_sampling, cast_df_to_tensor, binarize_target, plot_and_save,
-    build_log_dir_path, dump_model, save_history
+    build_log_dir_path, dump_model, save_history, load_dataset
 )
 from recsys_streaming_ml.data.utils import load_feature_maps
+from recsys_streaming_ml.db import mongo_db
 
 
 BINARY_MAP_THRESHOLD = 4.5
@@ -27,7 +28,7 @@ def _save_train_artifacts(model, history):
     run_id.mkdir(parents=True)
     save_history(history, save_path=run_id)
     plot_and_save(history, save_path=run_id)
-    dump_model(model, save_path=run_id)
+    dump_model(db=mongo_db, model=model, save_path=run_id)
     print(f"> Training Artifacts saved under {run_id}")
     
 
@@ -92,8 +93,7 @@ def train(args):
 
     torch.manual_seed(seed)
 
-    with open(DATASET_FILE.with_suffix(".pkl"), "rb") as f:
-      data = pickle.load(f)
+    data = load_dataset()
 
     (X_train, y_train, X_valid, y_valid) = \
         data['train_data'], data['train_targets'], data['train_data'], data['train_targets']
