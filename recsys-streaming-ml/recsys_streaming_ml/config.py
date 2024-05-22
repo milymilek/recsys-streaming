@@ -39,3 +39,6 @@ USER_ACTIONS_TOPIC = "users.actions"
 
 # trainging schedule
 TRAINING_OFFSET = "20 seconds"
+
+
+print(f'{MONGODB_HOST=}')

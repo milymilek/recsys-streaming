@@ -17,6 +17,22 @@ RUN poetry install --without dev --no-root && rm -rf $POETRY_CACHE_DIR
 
 # The runtime image, used to just run the code provided its virtual environment
 FROM python:3.10-buster as runtime
+#FROM apache/spark-py:latest
+
+#FROM spark:3.5.1-scala2.12-java11-ubuntu
+#FROM apache/spark:3.5.1-scala2.12-java17-python3-r-ubuntu
+
+# USER root
+
+# RUN set -ex; \
+#     apt update && apt upgrade -y  \
+#     apt install software-properties-common -y \  
+#     add-apt-repository ppa:deadsnakes/ppa \
+#     apt-get install -y python3.10 python3-pip; \
+#     rm -rf /var/lib/apt/lists/*
+
+#USER spark
+
 
 # Set venv envs
 ENV VIRTUAL_ENV=/app/.venv \

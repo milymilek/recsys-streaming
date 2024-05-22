@@ -1,18 +1,20 @@
 version: '3'
 
 services:
-  api:
-    build:
-      context: recsys-streaming-api
-      dockerfile: Dockerfile
-    container_name: recsys-streaming-api
-    ports:
-      - "8080:8080"
-    depends_on:
-      - mongo
-      - ml-engine
-    environment:
-      MONGODB_HOST: "mongo"
+  # api:
+  #   build:
+  #     context: recsys-streaming-api
+  #     dockerfile: Dockerfile
+  #   container_name: recsys-streaming-api
+  #   ports:
+  #     - "8080:8080"
+  #   depends_on:
+  #     - mongo
+  #     - ml-engine
+  #   environment:
+  #     MONGODB_HOST: "mongo"
+  #   networks:
+  #     - kafka_network
   
   ml-engine:
     build:
@@ -23,8 +25,11 @@ services:
       MONGODB_HOST: "mongo"
       DOWNLOAD_DATA_URL: "https://datarepo.eng.ucsd.edu/mcauley_group/data/amazon_2023/raw/review_categories/Handmade_Products.jsonl.gz"
       DOWNLOAD_METADATA_URL: "https://datarepo.eng.ucsd.edu/mcauley_group/data/amazon_2023/raw/meta_categories/meta_Handmade_Products.jsonl.gz"
+      DISABLE_SPARK_ENVS: 1
     volumes:
-      - ./recsys-streaming-ml/recsys_streaming_ml:/app/recsys_streaming_ml
+      - ./recsys-streaming-ml/.data:/app/.data
+      - ./recsys-streaming-ml/.runs:/app/.runs
+      - ./recsys-streaming-ml/recsys_streaming_ml/data:/app/recsys_streaming_ml/data
     networks:
       - kafka_network
   
@@ -39,6 +44,8 @@ services:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: root
       MONGO_INITDB_DATABASE: database
+    networks:
+      - kafka_network
 
 networks:
   kafka_network:

@@ -69,21 +69,23 @@ def _split_data(df: pd.DataFrame, validation_ratio: float, test_ratio: float) ->
 
 
 def _dump_data(data: dict, path: pathlib.Path) -> None:
-    for k, df in data.items():
-        df.to_pandas().to_csv((path / f"{k}.csv").as_posix(), index=False)
+    data['train_data'].to_spark().repartition(1).toPandas().to_csv((path / "train_data.csv").as_posix())
+    data['train_targets'].to_spark().repartition(1).toPandas().to_csv((path / "train_targets.csv").as_posix())
+    data['valid_data'].to_spark().repartition(1).toPandas().to_csv((path / "valid_data.csv").as_posix())
+    data['valid_targets'].to_spark().repartition(1).toPandas().to_csv((path / "valid_targets.csv").as_posix())
+    #for k, df in data.items():
+        #df.to_pandas().to_csv((path / f"{k}.csv").as_posix(), index=False)
+        #df.to_spark().coalesce(1).toPandas().to_csv((path / f"{k}.csv").as_posix())#.write.csv((path / f"{k}.csv").as_posix(), header=True, mode="overwrite")
+        #df.to_spark().toPandas().to_csv((path / f"{k}.csv").as_posix(), index=False)
         #df.to_spark().write.format("csv").mode('overwrite').save(path.as_posix())
 
     # with open(path.with_suffix(".pkl"), 'wb') as f:
     #     pickle.dump(data, f)
 
-
-def run():
-    print("SCRIPT: Process data - START")
-    session = spark()
-
+def process_data(df_rating_stream=None):
     _names_list = ["ratings", "metadata"]
 
-    df_ratings_stream = pd.DataFrame() #read_stream(...)
+    df_ratings_stream = pd.DataFrame() #read_stream(...)   df_rating_stream
     df_ratings_historical = read_df_from_mongo(db=mongo_db, collection=_names_list[0])
     df_ratings = pd.concat([df_ratings_stream, df_ratings_historical])
     df_metadata = read_df_from_mongo(db=mongo_db, collection=_names_list[1])
@@ -94,6 +96,13 @@ def run():
     filtered_data = _preprocess_data(psdf_ratings, psdf_metadata)
     splitted_data = _split_data(filtered_data, validation_ratio=0.2, test_ratio=0.0)
     _dump_data(splitted_data, path=DATASET_FILE)
+
+
+def run():
+    print("SCRIPT: Process data - START")
+    session = spark()
+
+    process_data()
 
     print(f'')
     print("SCRIPT: Process data - END")

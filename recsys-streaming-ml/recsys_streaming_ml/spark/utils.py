@@ -2,8 +2,9 @@ from pyspark.sql import SparkSession
 
 def _set_spark_envs():
     import os
-    os.environ['PYSPARK_PYTHON'] = 'C:/Users/Milosz/AppData/Local/pypoetry/Cache/virtualenvs/recsys-streaming-ml-Mj1TWbkU-py3.10/Scripts/python.exe'
-    os.environ['PYSPARK_DRIVER_PYTHON'] = 'C:/Users/Milosz/AppData/Local/pypoetry/Cache/virtualenvs/recsys-streaming-ml-Mj1TWbkU-py3.10/Scripts/python.exe'
+    if not os.environ['DISABLE_SPARK_ENVS']:
+        os.environ['PYSPARK_PYTHON'] = 'C:/Users/Milosz/AppData/Local/pypoetry/Cache/virtualenvs/recsys-streaming-ml-Mj1TWbkU-py3.10/Scripts/python.exe'
+        os.environ['PYSPARK_DRIVER_PYTHON'] = 'C:/Users/Milosz/AppData/Local/pypoetry/Cache/virtualenvs/recsys-streaming-ml-Mj1TWbkU-py3.10/Scripts/python.exe'
 
 def spark():
     """
@@ -13,9 +14,8 @@ def spark():
 
     spark = SparkSession.builder \
         .appName("CreateDataFrameFromDict") \
-        .master("local[2]") \
-        .config("spark.driver.memory", "4g") \
-        .config("spark.sql.shuffle.partitions", 10) \
+        .master("local[4]") \
+        .config("spark.driver.memory", "8g") \
         .getOrCreate()
     return spark
 
