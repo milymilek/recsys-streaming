@@ -44,7 +44,7 @@ def _preprocess_data(df_ratings: pd.DataFrame, df_metadata: pd.DataFrame) -> pd.
 
     #df.to_spark().write.csv((DATASET_FILE / "df_map.csv").as_posix())
     dataframe = df.to_spark().toPandas()
-    DATASET_FILE.mkdir(parents=True)
+    DATASET_FILE.mkdir(parents=True, exist_ok=True)
     dataframe.to_csv((DATASET_FILE / "dataset.csv").as_posix())
 
 

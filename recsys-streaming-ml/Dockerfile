@@ -1,7 +1,7 @@
 # The builder image, used to build the virtual environment
 FROM python:3.10-buster as builder
 
-RUN pip install poetry==1.6.1
+RUN pip install poetry==1.8.3
 
 ENV POETRY_NO_INTERACTION=1 \
     POETRY_VIRTUALENVS_IN_PROJECT=1 \
@@ -13,7 +13,7 @@ WORKDIR /app
 COPY pyproject.toml poetry.lock ./
 RUN touch README.md
 
-RUN poetry lock
+#RUN poetry lock
 RUN poetry install --without dev && rm -rf $POETRY_CACHE_DIR
 
 # The runtime image, used to just run the code provided its virtual environment
@@ -59,7 +59,13 @@ RUN curl https://dlcdn.apache.org/spark/spark-3.5.1/spark-3.5.1-bin-hadoop3.tgz 
 
 COPY --from=builder ${VIRTUAL_ENV} ${VIRTUAL_ENV}
 
+RUN pip install pyspark==3.5.1
+RUN pip install pyarrow
+RUN pip install torch --index-url https://download.pytorch.org/whl/cpu
+
 WORKDIR /app
+
+ENV PYTHONPATH=/app
 
 COPY recsys_streaming_ml ./recsys_streaming_ml
 COPY run.py ./run.py
