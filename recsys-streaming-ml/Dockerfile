@@ -71,4 +71,5 @@ COPY recsys_streaming_ml ./recsys_streaming_ml
 COPY run.py ./run.py
 
 # Suspend container so other tasks can run commands on the environment
-CMD ["sleep", "infinity"]
+#CMD ["sleep", "infinity"]
+ENTRYPOINT [ "python", "./recsys_streaming_ml/api/run.py" ]

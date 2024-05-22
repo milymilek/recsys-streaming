@@ -1,21 +1,6 @@
 version: '3'
 
-services:
-  # api:
-  #   build:
-  #     context: recsys-streaming-api
-  #     dockerfile: Dockerfile
-  #   container_name: recsys-streaming-api
-  #   ports:
-  #     - "8080:8080"
-  #   depends_on:
-  #     - mongo
-  #     - ml-engine
-  #   environment:
-  #     MONGODB_HOST: "mongo"
-  #   networks:
-  #     - kafka_network
-  
+services: 
   ml-engine:
     build:
       context: recsys-streaming-ml
@@ -26,6 +11,9 @@ services:
       DOWNLOAD_DATA_URL: "https://datarepo.eng.ucsd.edu/mcauley_group/data/amazon_2023/raw/review_categories/Handmade_Products.jsonl.gz"
       DOWNLOAD_METADATA_URL: "https://datarepo.eng.ucsd.edu/mcauley_group/data/amazon_2023/raw/meta_categories/meta_Handmade_Products.jsonl.gz"
       DISABLE_SPARK_ENVS: 1
+      IS_CONTAINER: True
+    ports:
+      - "8099:8099"
     volumes:
       - ./recsys-streaming-ml/.data:/app/.data
       - ./recsys-streaming-ml/.runs:/app/.runs
