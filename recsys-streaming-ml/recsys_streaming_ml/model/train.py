@@ -86,12 +86,8 @@ def test(model, criterion, val_loader, device):
     return test_loss, test_roc_auc
 
 
-def train(args):
-    device = 'cuda' if (args.cuda and torch.cuda.is_available()) else 'cpu'
-    n_epochs = args.epochs
-    seed = args.seed
-    batch_size = args.batch_size
-    validation_frac = args.validation_frac
+def train(epochs, batch_size, validation_frac, cuda, seed):
+    device = 'cuda' if (cuda and torch.cuda.is_available()) else 'cpu'
 
     torch.manual_seed(seed)
 
@@ -134,7 +130,7 @@ def train(args):
 
     history = {"train_loss": [], "train_roc_auc": [], "test_loss": [], "test_roc_auc": []}
     print(f"> Training model[{model.__class__.__name__}] on device[{device}] begins...")
-    for epoch in tqdm(range(n_epochs)):
+    for epoch in tqdm(range(epochs)):
         train_loss, train_roc_auc = train_epoch(
             model=model,
             criterion=criterion,
@@ -173,17 +169,14 @@ def parse_args():
     return p.parse_known_args()[0]
 
 
-def train_placeholer(users_actions_df, batch_id):
-    if not users_actions_df.isEmpty():
-        print(f"Showing data for batch: {batch_id}")
-        users_actions_df.show()
-
-
 def run():
     print("SCRIPT: Train model - START")
 
     args = parse_args()
-    train(args)
+    train(
+        args.epochs, args.batch_size, args.validation_frac,
+        args.cuda, args.seed
+    )
 
     print(f'')
     print("SCRIPT: Train model - END")
