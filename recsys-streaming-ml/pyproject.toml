@@ -23,7 +23,7 @@ torch = [
     {version = "2.0.1", source = "pytorch-cpu", platform = "linux"}
     #{ url = "https://download.pytorch.org/whl/cpu-cxx11-abi/torch-2.0.1%2Bcpu.cxx11.abi-cp310-cp310-linux_x86_64.whl#sha256=2166d8bf3977874c8d64a67e1173d603948cde5cfa2e9f73c6d1f7b2856599eb", platform = "linux"}
 ]
-# pyspark = "3.5.1"
+ pyspark = "3.5.1"
 
 
 

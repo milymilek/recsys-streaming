@@ -20,7 +20,10 @@ def mongo_client(*args, **kwargs):
         )
         db = client.admin
         client.server_info()
-        db.create_collection("model_versions", check_exists=False)
+        try:
+            db.create_collection("model_versions", check_exists=False)
+        except Exception as e:
+            pass
 
         print("[MONGO] Connection successful")
         return db
