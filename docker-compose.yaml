@@ -31,7 +31,7 @@ services:
       - ./recsys-streaming-ml/.runs:/app/.runs
       - ./recsys-streaming-ml/recsys_streaming_ml/data:/app/recsys_streaming_ml/data
     networks:
-      - kafka_network
+      - recsys-streaming_kafka_network
   
   mongo:
     image: mongo:latest
@@ -45,8 +45,8 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: root
       MONGO_INITDB_DATABASE: database
     networks:
-      - kafka_network
+      - recsys-streaming_kafka_network
 
 networks:
-  kafka_network:
+  recsys-streaming_kafka_network:
     external: true

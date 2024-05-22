@@ -112,10 +112,11 @@ def save_history(history: dict[str, list], save_path: pathlib.Path):
 
 
 def load_dataset(dataset_path: pathlib.Path = DATASET_FILE):
-    return {
-        "train_data": pd.read_csv(DATASET_FILE / "train_data.csv"),
-        "train_targets": pd.read_csv(DATASET_FILE / "train_targets.csv"),
-        "valid_data": pd.read_csv(DATASET_FILE / "valid_data.csv"),
-        "valid_targets": pd.read_csv(DATASET_FILE / "valid_targets.csv"),
-    }
+    return pd.read_csv(DATASET_FILE / "dataset.csv", index_col=[0])
+    # return {
+    #     "train_data": pd.read_csv(DATASET_FILE / "train_data.csv"),
+    #     "train_targets": pd.read_csv(DATASET_FILE / "train_targets.csv"),
+    #     "valid_data": pd.read_csv(DATASET_FILE / "valid_data.csv"),
+    #     "valid_targets": pd.read_csv(DATASET_FILE / "valid_targets.csv"),
+    # }
 

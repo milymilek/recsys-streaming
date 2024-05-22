@@ -6,6 +6,7 @@ import argparse
 
 import numpy as np
 from sklearn.metrics import roc_auc_score
+from sklearn.model_selection import train_test_split
 import torch
 from torch import nn
 from torch.utils.data import TensorDataset, DataLoader
@@ -90,15 +91,17 @@ def train(args):
     n_epochs = args.epochs
     seed = args.seed
     batch_size = args.batch_size
+    validation_frac = args.validation_frac
 
     torch.manual_seed(seed)
 
-    data = load_dataset()
+    dataset = load_dataset()
 
-    (X_train, y_train, X_valid, y_valid) = \
-        data['train_data'], data['train_targets'], data['train_data'], data['train_targets']
+    X, y = dataset.drop(columns=['rating', 'timestamp'], axis=1), dataset[['rating']]
+
+    X_train, X_valid, y_train, y_valid = train_test_split(X, y, test_size=validation_frac, random_state=seed)
     
-    X_train, y_train, X_valid, y_valid = cast_df_to_tensor(X_train, y_train, X_valid, y_valid)
+    X_train, X_valid, y_train, y_valid = cast_df_to_tensor(X_train, X_valid, y_train, y_valid)
     y_train = binarize_target(y_train, threshold=BINARY_MAP_THRESHOLD)
     y_valid = binarize_target(y_valid, threshold=BINARY_MAP_THRESHOLD)
     print(X_train.shape, y_train.shape, X_valid.shape, y_valid.shape)
@@ -165,6 +168,7 @@ def parse_args():
     p.add_argument("-bs", "--batch_size", default=16, type=int)
     p.add_argument("-c", "--cuda", default=False, type=bool, help="use cuda to train")
     p.add_argument("-s", "--seed", default=42, type=int)
+    p.add_argument("-v", "--validation_frac", default=0.2, type=float)
 
     return p.parse_known_args()[0]
 

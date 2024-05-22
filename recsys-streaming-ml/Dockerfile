@@ -13,10 +13,11 @@ WORKDIR /app
 COPY pyproject.toml poetry.lock ./
 RUN touch README.md
 
-RUN poetry install --without dev --no-root && rm -rf $POETRY_CACHE_DIR
+RUN poetry lock
+RUN poetry install --without dev && rm -rf $POETRY_CACHE_DIR
 
 # The runtime image, used to just run the code provided its virtual environment
-FROM python:3.10-buster as runtime
+FROM python:3.10-slim-buster as runtime
 #FROM apache/spark-py:latest
 
 #FROM spark:3.5.1-scala2.12-java11-ubuntu
@@ -45,10 +46,11 @@ RUN mkdir ${SPARK_HOME}
 
 # install Java
 RUN apt-get update && \
+    apt-get upgrade -y && \
     apt-get install -y openjdk-11-jdk && \
-    apt-get clean;
+    apt-get install curl -y
 
-RUN apt-get install telnet -y;
+# RUN apt-get install telnet -y;
 
 # install Spark
 RUN curl https://dlcdn.apache.org/spark/spark-3.5.1/spark-3.5.1-bin-hadoop3.tgz -o spark-3.5.1-bin-hadoop3.tgz \
