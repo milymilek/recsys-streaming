@@ -8,6 +8,7 @@ import pandas as pd
 import torch
 import matplotlib.pyplot as plt
 
+from recsys_streaming_ml.data.utils import find_csv_file
 from recsys_streaming_ml.db import read_latest_model_version_document
 from recsys_streaming_ml.config import RUNS_DIR, DATASET_FILE
 
@@ -112,7 +113,8 @@ def save_history(history: dict[str, list], save_path: pathlib.Path):
 
 
 def load_dataset(dataset_path: pathlib.Path = DATASET_FILE):
-    return pd.read_csv(DATASET_FILE / "dataset.csv", index_col=[0])
+    file = find_csv_file(DATASET_FILE)
+    return pd.read_csv(file)
     # return {
     #     "train_data": pd.read_csv(DATASET_FILE / "train_data.csv"),
     #     "train_targets": pd.read_csv(DATASET_FILE / "train_targets.csv"),

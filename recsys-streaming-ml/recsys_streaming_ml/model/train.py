@@ -93,7 +93,7 @@ def train(epochs, batch_size, validation_frac, cuda, seed):
 
     dataset = load_dataset()
 
-    X, y = dataset.drop(columns=['rating', 'timestamp'], axis=1), dataset[['rating']]
+    X, y = dataset[['user_id', 'parent_asin', 'store']], dataset[['rating']]
 
     X_train, X_valid, y_train, y_valid = train_test_split(X, y, test_size=validation_frac, random_state=seed)
     

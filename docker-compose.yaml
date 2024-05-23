@@ -20,6 +20,7 @@ services:
       - ./recsys-streaming-ml/.data:/app/.data
       - ./recsys-streaming-ml/.runs:/app/.runs
       - ./recsys-streaming-ml/recsys_streaming_ml/data:/app/recsys_streaming_ml/data
+      - ./recsys-streaming-ml/recsys_streaming_ml/model:/app/recsys_streaming_ml/model
     networks:
       - recsys-streaming_kafka_network
   

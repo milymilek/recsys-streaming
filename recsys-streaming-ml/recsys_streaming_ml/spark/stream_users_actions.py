@@ -13,8 +13,8 @@ def full_retraining_process(users_actions_df, batch_id):
         print(f"Showing data for batch: {batch_id}")
         users_actions_df.show()
 
-        process_data(df_rating_stream=users_actions_df)
-        train(epochs=5, batch_size=16, validation_frac=0.2, cuda=False, seed=42)
+        process_data(df_rating_stream=users_actions_df.toPandas())
+        train(epochs=3, batch_size=16, validation_frac=0.2, cuda=False, seed=42)
 
 
 def stream():
