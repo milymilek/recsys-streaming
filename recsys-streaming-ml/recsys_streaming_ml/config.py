@@ -32,13 +32,15 @@ MONGODB_AUTHSOURCE = "admin"
 MONGODB_USERNAME = "root"
 MONGODB_PASSWORD = "root"
 
+REDIS_HOST = os.getenv("REDIS_HOST", default="localhost")
+REDIS_PORT = 6379
+
+
 # kafka
-KAFKA_BROKER_URL = "localhost:9092"
+KAFKA_BROKER_URL = os.getenv("KAFKA_BROKER_URL", default="localhost:9092")
 RECOMMENDATIONS_TOPIC = "recommendations"
 USER_ACTIONS_TOPIC = "users.actions"
 
 # trainging schedule
-TRAINING_OFFSET = "20 seconds"
-
-
-print(f'{MONGODB_HOST=}')
+TRAINING_OFFSET = "30 seconds"
+EVALUATE_OFFSET = "10 seconds"

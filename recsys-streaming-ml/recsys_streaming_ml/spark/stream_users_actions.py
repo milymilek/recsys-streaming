@@ -17,11 +17,11 @@ def full_retraining_process(users_actions_df, batch_id):
         train(epochs=5, batch_size=16, validation_frac=0.2, cuda=False, seed=42)
 
 
-def main():
+def stream():
     session: SparkSession = spark_structured_streaming()
 
     schema = StructType([
-        StructField("asin", StringType(), True),
+        StructField("parent_asin", StringType(), True),
         StructField("user_id", StringType(), True)
     ])
 
@@ -44,5 +44,13 @@ def main():
     query.awaitTermination()
 
 
+def run():
+    print("SCRIPT: Stream users actions - START")
+
+    stream()
+
+    print("SCRIPT: Train model - END")
+
+
 if __name__ == "__main__":
-    main()
+    run()
