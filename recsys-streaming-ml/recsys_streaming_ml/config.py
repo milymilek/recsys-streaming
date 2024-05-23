@@ -43,4 +43,4 @@ USER_ACTIONS_TOPIC = "users.actions"
 
 # trainging schedule
 TRAINING_OFFSET = "120 seconds"
-EVALUATE_OFFSET = "10 seconds"
+EVALUATE_OFFSET = "30 seconds"
