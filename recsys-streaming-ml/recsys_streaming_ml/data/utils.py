@@ -1,5 +1,6 @@
 import pickle
 import pathlib
+import os
 
 from recsys_streaming_ml.config import FEATURE_MAPS_FILE, FEATURE_STORE_FILE
 from recsys_streaming_ml.db import read_df_from_mongo
@@ -30,3 +31,13 @@ def read_item_feature_store(db, feature_maps, collection='metadata'):
     item_feature_store = item_feature_store.drop(columns='store').dropna().astype(int).sort_values(by='parent_asin').reset_index(drop=True)
 
     return item_feature_store
+
+
+def find_csv_file(directory_path):
+    # Iterate over the files in the directory
+    for root, dirs, files in os.walk(directory_path):
+        for file in files:
+            # Check if the file has a .csv suffix
+            if file.endswith('.csv'):
+                return os.path.join(root, file)
+    return None

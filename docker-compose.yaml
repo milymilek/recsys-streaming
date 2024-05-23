@@ -1,28 +1,18 @@
 version: '3'
 
-services: 
-  triton:
-    image: nvcr.io/nvidia/tritonserver:21.05-py3
-    ports:
-      - "8000:8000"
-      - "8001:8001"
-      - "8002:8002"
-    volumes:
-      - ./recsys-streaming-ml/.model_repository:/models
-    command: [
-      "tritonserver",
-      "--model-repository=/models"
-    ]
+services:
   ml-engine:
     build:
       context: recsys-streaming-ml
       dockerfile: Dockerfile
     container_name: recsys-streaming-ml
     environment:
+      REDIS_HOST: "redis"
       MONGODB_HOST: "mongo"
       DOWNLOAD_DATA_URL: "https://datarepo.eng.ucsd.edu/mcauley_group/data/amazon_2023/raw/review_categories/Handmade_Products.jsonl.gz"
       DOWNLOAD_METADATA_URL: "https://datarepo.eng.ucsd.edu/mcauley_group/data/amazon_2023/raw/meta_categories/meta_Handmade_Products.jsonl.gz"
       DISABLE_SPARK_ENVS: 1
+      KAFKA_BROKER_URL: "kafka0:9093"
       IS_CONTAINER: True
     ports:
       - "8099:8099"
@@ -30,6 +20,7 @@ services:
       - ./recsys-streaming-ml/.data:/app/.data
       - ./recsys-streaming-ml/.runs:/app/.runs
       - ./recsys-streaming-ml/recsys_streaming_ml/data:/app/recsys_streaming_ml/data
+      - ./recsys-streaming-ml/recsys_streaming_ml/model:/app/recsys_streaming_ml/model
     networks:
       - recsys-streaming_kafka_network
   
@@ -44,6 +35,16 @@ services:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: root
       MONGO_INITDB_DATABASE: database
+    networks:
+      - recsys-streaming_kafka_network
+
+  redis:
+    image: redis:latest
+    ports:
+      - "6379:6379"
+    volumes:
+      - .redis:/data
+    command: redis-server --appendonly yes
     networks:
       - recsys-streaming_kafka_network
 

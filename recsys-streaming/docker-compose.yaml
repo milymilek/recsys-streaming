@@ -6,7 +6,7 @@ services:
     ports:
       - "2181:2181"
     networks:
-      - kafka_network
+      - recsys-streaming_kafka_network
 
   kafka0:
     container_name: kafka0
@@ -25,9 +25,9 @@ services:
       KAFKA_ADVERTISED_LISTENERS: INSIDE://kafka0:9093,OUTSIDE://localhost:9092
       KAFKA_INTER_BROKER_LISTENER_NAME: INSIDE
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
+      - ../.kafka:/var/run/docker.sock
     networks:
-      - kafka_network
+      - recsys-streaming_kafka_network
 
   mock-user-actions-producer:
     build:
@@ -41,7 +41,7 @@ services:
     depends_on:
       - kafka0
     networks:
-      - kafka_network
+      - recsys-streaming_kafka_network
 
   mock-recommendations-producer:
     build:
@@ -55,8 +55,8 @@ services:
     depends_on:
       - kafka0
     networks:
-      - kafka_network
+      - recsys-streaming_kafka_network
 
 networks:
-  kafka_network:
-    driver: bridge
+  recsys-streaming_kafka_network:
+    external: true

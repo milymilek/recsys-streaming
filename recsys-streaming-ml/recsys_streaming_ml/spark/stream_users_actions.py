@@ -1,6 +1,6 @@
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import from_json
-from pyspark.sql.types import StructType, StructField, StringType
+from pyspark.sql.types import StructType, StructField, StringType, IntegerType, FloatType
 
 from recsys_streaming_ml.spark.utils import spark_structured_streaming
 from recsys_streaming_ml.config import KAFKA_BROKER_URL, USER_ACTIONS_TOPIC, TRAINING_OFFSET
@@ -13,16 +13,18 @@ def full_retraining_process(users_actions_df, batch_id):
         print(f"Showing data for batch: {batch_id}")
         users_actions_df.show()
 
-        process_data(df_rating_stream=users_actions_df)
-        train(epochs=5, batch_size=16, validation_frac=0.2, cuda=False, seed=42)
+        process_data(df_rating_stream=users_actions_df.toPandas())
+        train(epochs=3, batch_size=16, validation_frac=0.2, cuda=False, seed=42)
 
 
-def main():
+def stream():
     session: SparkSession = spark_structured_streaming()
 
     schema = StructType([
-        StructField("asin", StringType(), True),
-        StructField("user_id", StringType(), True)
+        StructField("timestamp", IntegerType(), True),
+        StructField("rating", FloatType(), True),
+        StructField("user_id", StringType(), True),
+        StructField("parent_asin", StringType(), True),
     ])
 
     df = session \
@@ -44,5 +46,13 @@ def main():
     query.awaitTermination()
 
 
+def run():
+    print("SCRIPT: Stream users actions - START")
+
+    stream()
+
+    print("SCRIPT: Train model - END")
+
+
 if __name__ == "__main__":
-    main()
+    run()
