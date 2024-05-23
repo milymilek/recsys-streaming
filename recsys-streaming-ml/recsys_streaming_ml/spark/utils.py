@@ -15,6 +15,7 @@ def spark():
     spark = SparkSession.builder \
         .appName("CreateDataFrameFromDict") \
         .master("local[4]") \
+        .config("spark.executor.memory", "6g") \
         .config("spark.driver.memory", "8g") \
         .getOrCreate()
     return spark

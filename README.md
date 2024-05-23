@@ -25,4 +25,15 @@ The project utilizes the Amazon Reviews'23 dataset, which can be found [here](ht
 git clone https://github.com/milymilek/gnn-rl-recsys.git
 ```
 
-**2. tbc...**
+**2. Installation**
+```bash
+docker network create --driver bridge recsys-streaming_kafka_network
+```
+
+```bash
+docker-compose -f recsys-streaming/docker-compose.yml up --build
+```
+
+```bash
+docker-compose up --build
+```

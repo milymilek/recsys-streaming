@@ -3,6 +3,7 @@ import json
 import time
 import pandas as pd
 from kafka import KafkaProducer
+import random
 
 
 TOPIC = os.getenv("TOPIC", None)
@@ -28,6 +29,10 @@ def _wait_for_kafka(bootstrap_servers: str) -> KafkaProducer:
 def _generate_and_send_messages(producer: KafkaProducer, data: pd.DataFrame, topic: str, interval: float) -> None:
     while True:
         message = data.sample()
+        if TOPIC == "users.actions":
+            ratings = [1.0, 2.0, 3.0, 4.0, 5.0]
+            message['rating'] = random.choice(ratings)
+            message['timestamp'] = int(time.time())
         message_dict = message.to_dict(orient='records')[0]
         message_json = json.dumps(message_dict).encode('utf-8')
         producer.send(topic, value=message_json)

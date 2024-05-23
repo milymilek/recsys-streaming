@@ -1,6 +1,6 @@
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import from_json
-from pyspark.sql.types import StructType, StructField, StringType
+from pyspark.sql.types import StructType, StructField, StringType, IntegerType, FloatType
 
 from recsys_streaming_ml.spark.utils import spark_structured_streaming
 from recsys_streaming_ml.config import KAFKA_BROKER_URL, USER_ACTIONS_TOPIC, TRAINING_OFFSET
@@ -21,8 +21,10 @@ def stream():
     session: SparkSession = spark_structured_streaming()
 
     schema = StructType([
+        StructField("timestamp", IntegerType(), True),
+        StructField("rating", FloatType(), True),
+        StructField("user_id", StringType(), True),
         StructField("parent_asin", StringType(), True),
-        StructField("user_id", StringType(), True)
     ])
 
     df = session \

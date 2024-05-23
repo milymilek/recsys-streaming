@@ -1,5 +1,4 @@
-#/bin/bash
-docker network create app_network
+docker network create --driver bridge recsys-streaming_kafka_network
 cd recsys-streaming/kafka
 docker compose up 
 cd -
