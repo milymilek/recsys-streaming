@@ -62,6 +62,7 @@ COPY --from=builder ${VIRTUAL_ENV} ${VIRTUAL_ENV}
 RUN pip install pyspark==3.5.1
 RUN pip install pyarrow
 RUN pip install torch --index-url https://download.pytorch.org/whl/cpu
+RUN pip install onnx tritonclient[http]
 
 WORKDIR /app
 

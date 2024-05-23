@@ -2,7 +2,7 @@ from pyspark.sql import SparkSession
 
 def _set_spark_envs():
     import os
-    if not os.environ['DISABLE_SPARK_ENVS']:
+    if os.getenv('DISABLE_SPARK_ENVS') is None:
         os.environ['PYSPARK_PYTHON'] = 'C:/Users/Milosz/AppData/Local/pypoetry/Cache/virtualenvs/recsys-streaming-ml-Mj1TWbkU-py3.10/Scripts/python.exe'
         os.environ['PYSPARK_DRIVER_PYTHON'] = 'C:/Users/Milosz/AppData/Local/pypoetry/Cache/virtualenvs/recsys-streaming-ml-Mj1TWbkU-py3.10/Scripts/python.exe'
 

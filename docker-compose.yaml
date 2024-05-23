@@ -1,6 +1,18 @@
 version: '3'
 
 services: 
+  triton:
+    image: nvcr.io/nvidia/tritonserver:21.05-py3
+    ports:
+      - "8000:8000"
+      - "8001:8001"
+      - "8002:8002"
+    volumes:
+      - ./recsys-streaming-ml/.model_repository:/models
+    command: [
+      "tritonserver",
+      "--model-repository=/models"
+    ]
   ml-engine:
     build:
       context: recsys-streaming-ml
