@@ -21,4 +21,6 @@ jobs:
         pip install poetry
         poetry install
         pip install torch --index-url https://download.pytorch.org/whl/cpu
+        pip install pyspark==3.5.1
+        pip install pyarrow
         poetry run pytest
