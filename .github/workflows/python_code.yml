@@ -27,23 +27,55 @@ jobs:
     
   test:
     runs-on: ubuntu-latest
-
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.10'
+      - name: Install Python
+        uses: actions/setup-python@v4
+
+      - name: Install poetry
+        uses: abatilo/actions-poetry@v2
+
+      - name: Setup a local virtual environment (if no poetry.toml file)
+        run: |
+          poetry config virtualenvs.create true --local
+          poetry config virtualenvs.in-project true --local
+
+      - name: Define a cache for the virtual environment based on the dependencies lock file
+        uses: actions/cache@v3
+        with:
+          path: ./.venv
+          key: venv-${{ hashFiles('poetry.lock') }}
+
+      - name: Install the project dependencies
+        run: |
+          poetry install
+          pip install torch --index-url https://download.pytorch.org/whl/cpu
+          pip install pyspark==3.5.1
+          pip install pyarrow
+
+      - name: Run the automated tests (for example)
+        run: poetry run pytest -v
+
+    # runs-on: ubuntu-latest
+
+    # steps:
+    # - name: Checkout repository
+    #   uses: actions/checkout@v3
+
+    # - name: Set up Python
+    #   uses: actions/setup-python@v4
+    #   with:
+    #     python-version: '3.10'
     
-    - name: Setup env and run tests
-      run: |
-        pip install poetry
-        poetry config virtualenvs.in-project true
-        poetry install
-        ./venv/bin/activate
-        pip install torch --index-url https://download.pytorch.org/whl/cpu
-        pip install pyspark==3.5.1
-        pip install pyarrow
-        poetry run pytest
+    # - name: Setup env and run tests
+    #   run: |
+    #     pip install poetry
+    #     poetry config virtualenvs.in-project true
+    #     poetry install
+    #     ./venv/bin/activate
+    #     pip install torch --index-url https://download.pytorch.org/whl/cpu
+    #     pip install pyspark==3.5.1
+    #     pip install pyarrow
+    #     poetry run pytest
