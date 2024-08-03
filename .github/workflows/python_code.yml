@@ -15,18 +15,9 @@ jobs:
       with:
         python-version: '3.10'
     
-    - name: Move cwd to recsys-streaming-ml
-      run: |
-        cd recsys-streaming-ml
-
-    - name: Install Poetry
+    - name: Setup env and run tests
+      working-directory: ./recsys-streaming-ml
       run: |
         pip install poetry
-
-    - name: Install dependencies
-      run: |
         poetry install
-
-    - name: Run tests
-      run: |
         poetry run pytest
