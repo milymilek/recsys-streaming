@@ -29,7 +29,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install Python
         uses: actions/setup-python@v4
@@ -51,12 +51,33 @@ jobs:
       - name: Install the project dependencies
         run: |
           poetry install
-          pip install torch --index-url https://download.pytorch.org/whl/cpu
-          pip install pyspark==3.5.1
-          pip install pyarrow
+          poetry run pip install torch --index-url https://download.pytorch.org/whl/cpu
+          poetry run pip install pyspark==3.5.1
+          poetry run pip install pyarrow
 
       - name: Run the automated tests (for example)
         run: poetry run pytest -v
+
+    build:
+      runs-on: ubuntu-latest
+
+      steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build the Docker image
+        run: docker build . --tag recsys-streaming-ml:$(date +%s)
+
+    publish:
+      runs-on: ubuntu-latest
+
+      steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Publish imgae
+        run: echo  "Publishing docker image to repo..."
+
 
     # runs-on: ubuntu-latest
 
