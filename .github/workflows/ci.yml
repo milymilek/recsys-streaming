@@ -58,25 +58,25 @@ jobs:
       - name: Run the automated tests (for example)
         run: poetry run pytest -v
 
-    build:
-      runs-on: ubuntu-latest
+  build:
+    runs-on: ubuntu-latest
 
-      steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
 
-      - name: Build the Docker image
-        run: docker build . --tag recsys-streaming-ml:$(date +%s)
+    - name: Build the Docker image
+      run: docker build . --tag recsys-streaming-ml:$(date +%s)
 
-    publish:
-      runs-on: ubuntu-latest
+  publish:
+    runs-on: ubuntu-latest
 
-      steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      
-      - name: Publish imgae
-        run: echo  "Publishing docker image to repo..."
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    
+    - name: Publish imgae
+      run: echo  "Publishing docker image to repo..."
 
 
     # runs-on: ubuntu-latest
