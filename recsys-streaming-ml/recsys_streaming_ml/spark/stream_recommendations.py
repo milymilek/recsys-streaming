@@ -1,12 +1,16 @@
 from itertools import chain
 import numpy as np
-import pandas as pd
-import torch
 
 import pyspark
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import (
-    array, col, create_map, lit, rank, collect_list, from_json
+    array,
+    col,
+    create_map,
+    lit,
+    rank,
+    collect_list,
+    from_json,
 )
 from pyspark.sql.window import Window
 from pyspark.sql.types import FloatType, StructType, StructField, StringType
@@ -14,17 +18,24 @@ from pyspark.ml.functions import predict_batch_udf
 
 from recsys_streaming_ml.spark.utils import spark, spark_structured_streaming
 from recsys_streaming_ml.model.utils import load_model_from_db, build_input_tensor
-from recsys_streaming_ml.data.utils import load_feature_maps, read_item_feature_store, build_reverse_feature_maps
+from recsys_streaming_ml.data.utils import (
+    load_feature_maps,
+    read_item_feature_store,
+    build_reverse_feature_maps,
+)
 from recsys_streaming_ml.db import mongo_db
-from recsys_streaming_ml.db.redis_client import send_recommendations_to_file, send_recommendations_to_redis
-from recsys_streaming_ml.config import DATA_DIR, KAFKA_BROKER_URL, RECOMMENDATIONS_TOPIC, TRAINING_OFFSET, \
-    EVALUATE_OFFSET
+from recsys_streaming_ml.db.redis_client import send_recommendations_to_redis
+from recsys_streaming_ml.config import (
+    KAFKA_BROKER_URL,
+    RECOMMENDATIONS_TOPIC,
+    EVALUATE_OFFSET,
+)
 
 
 def process_data(
-        df: pyspark.sql.DataFrame,
-        item_feature_store: pyspark.sql.DataFrame,
-        user_id_mapping: dict[str, int]
+    df: pyspark.sql.DataFrame,
+    item_feature_store: pyspark.sql.DataFrame,
+    user_id_mapping: dict[str, int],
 ) -> pyspark.sql.dataframe.DataFrame:
     """
     Process the DataFrame by mapping user_ids using the provided dictionary.
@@ -38,10 +49,10 @@ def process_data(
     return processed_df
 
 
-def predict_batch_fn(device='cpu'):
+def predict_batch_fn(device="cpu"):
     # load model from checkpoint
-    import torch
     from recsys_streaming_ml.db import mongo_db
+
     model = load_model_from_db(mongo_db, device)
 
     # define predict function in terms of numpy arrays
@@ -88,28 +99,35 @@ def evaluate(users_df, batch_id):
 
     feature_maps: dict[str, int] = load_feature_maps()
     reverse_feature_maps: dict[int, str] = build_reverse_feature_maps(feature_maps)
-    item_feature_store: pyspark.sql.DataFrame = session.createDataFrame(read_item_feature_store(mongo_db, feature_maps))
+    item_feature_store: pyspark.sql.DataFrame = session.createDataFrame(
+        read_item_feature_store(mongo_db, feature_maps)
+    )
 
-    processed_df = process_data(users_df, item_feature_store, feature_maps['user_id_map'])
+    processed_df = process_data(
+        users_df, item_feature_store, feature_maps["user_id_map"]
+    )
 
     predict_udf = predict_batch_udf(
         predict_batch_fn,
         return_type=FloatType(),
         batch_size=128,
-        input_tensor_shapes=[[3]]
+        input_tensor_shapes=[[3]],
     )
 
-    predictions = processed_df.withColumn("predicted_rating",
-                                          predict_udf(array("map_user_id", "parent_asin", "store_id")))
+    predictions = processed_df.withColumn(
+        "predicted_rating", predict_udf(array("map_user_id", "parent_asin", "store_id"))
+    )
     predictions.show()
 
     ranked_topk = get_ranked_topk_predictions(predictions)
-    remapped_ranked_topk = remap_entities(ranked_topk, reverse_feature_maps['user_id_map'],
-                                          reverse_feature_maps['parent_id_map'])
+    remapped_ranked_topk = remap_entities(
+        ranked_topk,
+        reverse_feature_maps["user_id_map"],
+        reverse_feature_maps["parent_id_map"],
+    )
     recommendation_lists = list_recommendations(remapped_ranked_topk)
 
     send_recommendations_to_redis(recommendation_lists)
-
 
 
 def main():
@@ -117,21 +135,23 @@ def main():
 
     schema = StructType([StructField("user_id", StringType(), False)])
 
-    kafkaStream = session.readStream \
-        .format("kafka") \
-        .option("kafka.bootstrap.servers", KAFKA_BROKER_URL) \
-        .option("subscribe", RECOMMENDATIONS_TOPIC) \
-        .option("startingOffsets", "latest") \
+    kafkaStream = (
+        session.readStream.format("kafka")
+        .option("kafka.bootstrap.servers", KAFKA_BROKER_URL)
+        .option("subscribe", RECOMMENDATIONS_TOPIC)
+        .option("startingOffsets", "latest")
         .load()
+    )
 
     dataStream = kafkaStream.select(
         from_json(col("value").cast("string"), schema).alias("jsonData")
     ).select("jsonData.*")
 
-    query = dataStream.writeStream \
-        .foreachBatch(evaluate) \
-        .trigger(processingTime=EVALUATE_OFFSET) \
+    query = (
+        dataStream.writeStream.foreachBatch(evaluate)
+        .trigger(processingTime=EVALUATE_OFFSET)
         .start()
+    )
 
     query.awaitTermination()
 

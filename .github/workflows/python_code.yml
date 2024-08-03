@@ -2,7 +2,29 @@ name: Python Code CI
 
 on: [push]
 
+defaults:
+ run:
+  working-directory: ./recsys-streaming-ml
+
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+
+    - name: Setup env and run ruff linting and typechecking
+      run: |
+        pip install ruff
+        ruff check
+
+    
   test:
     runs-on: ubuntu-latest
 
@@ -16,10 +38,10 @@ jobs:
         python-version: '3.10'
     
     - name: Setup env and run tests
-      working-directory: ./recsys-streaming-ml
       run: |
         pip install poetry
         poetry install
+        poetry shell
         pip install torch --index-url https://download.pytorch.org/whl/cpu
         pip install pyspark==3.5.1
         pip install pyarrow

@@ -3,19 +3,21 @@ import importlib
 
 
 SCRIPT_MAP = {
-    'download_data': ('recsys_streaming_ml.data', 'download_data'),
-    'insert_in_db': ('recsys_streaming_ml.data', 'insert_in_db'),
-    'process_data': ('recsys_streaming_ml.data', "process_data"),
-    'train': ('recsys_streaming_ml.model', 'train'),
-    'evaluate': ('recsys_streaming_ml.model', 'evaluate')
+    "download_data": ("recsys_streaming_ml.data", "download_data"),
+    "insert_in_db": ("recsys_streaming_ml.data", "insert_in_db"),
+    "process_data": ("recsys_streaming_ml.data", "process_data"),
+    "train": ("recsys_streaming_ml.model", "train"),
+    "evaluate": ("recsys_streaming_ml.model", "evaluate"),
 }
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description='Run a specific script.')
-    parser.add_argument("--script", choices=[
-        'download_data', 'insert_in_db', "process_data", 'train', 'evaluate'
-    ], help='Specify the script to run')
+    parser = argparse.ArgumentParser(description="Run a specific script.")
+    parser.add_argument(
+        "--script",
+        choices=["download_data", "insert_in_db", "process_data", "train", "evaluate"],
+        help="Specify the script to run",
+    )
     return parser.parse_known_args()[0]
 
 

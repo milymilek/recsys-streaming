@@ -32,7 +32,8 @@ class EmbeddingNet(nn.Module):
             str(i): nn.Embedding(
                 size,
                 emb_dim,
-            ) for i, size in enumerate(feature_sizes)
+            )
+            for i, size in enumerate(feature_sizes)
         }
         self.embeddings = nn.ModuleDict(_embeddings)
 
@@ -44,7 +45,7 @@ class EmbeddingNet(nn.Module):
             x_emb.append(emb)
         x_emb = torch.cat(x_emb, dim=1)
         return x_emb
-    
+
 
 class FM(nn.Module):
     def forward(self, inputs):
@@ -55,7 +56,7 @@ class FM(nn.Module):
         cross_term = 0.5 * (square_of_sum - sum_of_square)
 
         return cross_term
-    
+
 
 class DeepFM(nn.Module):
     def __init__(self, emb_dim, hidden_dim, feature_sizes):

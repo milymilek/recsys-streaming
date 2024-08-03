@@ -1,5 +1,3 @@
-import pandas as pd
-from pyspark.sql import SparkSession
 from redis import Redis
 import pyspark
 
@@ -14,17 +12,17 @@ def send_recommendations_to_file(df: pyspark.sql.dataframe.DataFrame):
 def save_to_redis(partition):
     redis_client = Redis(host=REDIS_HOST, port=REDIS_PORT, db=0)
     for row in partition:
-        redis_client.set(row.user_id, ','.join(row.top_k_asins))
+        redis_client.set(row.user_id, ",".join(row.top_k_asins))
 
 
 def send_recommendations_to_redis(df: pyspark.sql.dataframe.DataFrame):
-    print('Sending recommendations to redis...')
+    print("Sending recommendations to redis...")
     df.rdd.foreachPartition(save_to_redis)
 
 
 def get_recommendations():
     redis_client = Redis(host=REDIS_HOST, port=REDIS_PORT, db=0)
-    all_keys = redis_client.keys('*')
+    all_keys = redis_client.keys("*")
     for key in all_keys:
         value = redis_client.get(key)
         print(f"{key}: {value}")

@@ -19,8 +19,8 @@ DATASET_FILE = DATA_DIR / "dataset"
 FEATURE_MAPS_FILE = DATA_DIR / "feature_maps"
 FEATURE_STORE_FILE = DATA_DIR / "feature_store"
 TIMESTAMP_COL = "timestamp"
-MODEL_COLS = ['timestamp', 'rating', 'user_id', 'parent_asin']
-META_MODEL_COLS = ['parent_asin', 'store']
+MODEL_COLS = ["timestamp", "rating", "user_id", "parent_asin"]
+META_MODEL_COLS = ["parent_asin", "store"]
 
 # train
 RUNS_DIR = pathlib.Path(".runs")

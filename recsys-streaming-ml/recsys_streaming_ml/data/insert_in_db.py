@@ -3,13 +3,16 @@ import json
 import pathlib
 
 from recsys_streaming_ml.config import (
-    MODEL_COLS, META_MODEL_COLS, DATA_FILE, METADATA_FILE
+    MODEL_COLS,
+    META_MODEL_COLS,
+    DATA_FILE,
+    METADATA_FILE,
 )
 from recsys_streaming_ml.db import mongo_db, insert_df_to_mongo
 
 
 def _read_jsonl(file: pathlib.Path):
-    with open(file, 'r') as fp:
+    with open(file, "r") as fp:
         dct = [json.loads(line.strip()) for line in fp]
         return pd.DataFrame(dct)
 
@@ -35,5 +38,5 @@ def run():
         df = _filter_cols(df, cols)
         insert_df_to_mongo(db=mongo_db, df=df, collection=name)
 
-    print(f'Data inserted to MongoDB.')
+    print("Data inserted to MongoDB.")
     print("SCRIPT: Insert in DB - END")
