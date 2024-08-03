@@ -40,8 +40,9 @@ jobs:
     - name: Setup env and run tests
       run: |
         pip install poetry
+        poetry config virtualenvs.in-project true
         poetry install
-        poetry shell
+        ./venv/bin/activate
         pip install torch --index-url https://download.pytorch.org/whl/cpu
         pip install pyspark==3.5.1
         pip install pyarrow
