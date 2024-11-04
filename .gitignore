@@ -1,3 +1,5 @@
 .mongo
 .redis
 .kafka
+.datalake
+airflow.env
