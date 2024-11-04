@@ -54,6 +54,7 @@ def save_partitioned_data(df, partition_column: str, output_dir: Path):
 
 def main():
     # Step 1: Download raw data
+
     json_path = RAW_DATA_DIR / FILE_NAME
     # download_data(DATA_SOURCE_URL, json_path)
 
