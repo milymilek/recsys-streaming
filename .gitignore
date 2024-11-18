@@ -4,3 +4,4 @@
 .datalake
 airflow.env
 .venv/
+.DS_Store

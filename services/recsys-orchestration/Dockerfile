@@ -9,7 +9,7 @@ RUN apt-get update && \
 RUN curl -LsSf https://astral.sh/uv/install.sh | sh
 
 ENV PATH="$HOME/.local/bin:$PATH"
-ENV JAVA_HOM="/usr/lib/jvm/java-17-openjdk-arm64"
+ENV JAVA_HOME="/usr/lib/jvm/java-17-openjdk-arm64"
 
 USER airflow
 

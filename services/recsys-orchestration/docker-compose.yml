@@ -15,6 +15,7 @@ x-airflow-common: &airflow-common
   env_file:
     - airflow.env
   volumes:
+    - .datalake:/opt/airflow/.datalake
     - ./jobs:/opt/airflow/jobs
     - ./dags:/opt/airflow/dags
     - ./logs:/opt/airflow/logs

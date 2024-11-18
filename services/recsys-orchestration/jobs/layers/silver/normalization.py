@@ -31,7 +31,7 @@ class LayerOperator:
         return list((self.base_path / self._raw).iterdir())
 
     def read_path(self, file_name: str) -> Path:
-        return self.base_path / self._read_layer.value / file_name
+        return self.base_path / self._read_layer.value / f"amazon_books/data_source=http_github/{file_name}"
 
     def write_path(self, file_name: str) -> Path:
         return self.base_path / self._write_layer.value / f"amazon_books/data_source=http_github/{file_name}"
@@ -76,12 +76,7 @@ class TableFactory:
         return c(df)
 
 
-# spark = SparkSession.builder.appName("Bronze Layer Ingestion").config("spark.sql.parquet.compression.codec", "snappy").getOrCreate()  # type: ignore
-spark = SparkSession.builder.appName("Bronze Layer Ingestion").getOrCreate()
-
-# text = "Hello Spark Hello Python Hello Airflow Hello Docker and Hello Yusuf"
-# # print(text)
-# spark.stop()
+spark = SparkSession.builder.appName("Bronze Layer Ingestion").config("spark.sql.parquet.compression.codec", "snappy").getOrCreate()  # type: ignore
 
 
 def load_json_to_spark(file_path: Path):
@@ -121,7 +116,7 @@ def save_partitioned_data(df, partition_column: str, output_dir: Path):
 
 
 def main():
-    logging.info(f"\n\n\n {'='*5}Starting ingestion.{'='*5}\n\n\n")
+    logging.info(f"\n\n\n {'='*5}Starting normalization.{'='*5}\n\n\n")
 
     kwargs = {}
     if os.getenv("RAW_PATH") is not None:
@@ -130,8 +125,6 @@ def main():
     operator = LayerOperator(read_layer=Layers.RAW, write_layer=Layers.BRONZE, **kwargs)
 
     files = operator.read_files()
-
-    print(files)
 
     for file in files:
         logging.info(f"Reading file {file}...")
