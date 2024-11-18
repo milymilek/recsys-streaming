@@ -3,3 +3,4 @@
 .kafka
 .datalake
 airflow.env
+.venv/

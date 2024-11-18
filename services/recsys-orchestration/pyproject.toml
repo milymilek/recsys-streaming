@@ -1,0 +1,18 @@
+[project]
+name = "recsys-orchestration"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "apache-airflow-providers-apache-spark==4.11.1",
+    "apache-airflow-providers-google==10.24.0",
+    "apache-airflow-providers-openlineage==1.12.2",
+    "apache-airflow==2.10.2",
+    "pyspark==3.4.2",
+]
+
+[dependency-groups]
+dev = [
+    "ipykernel>=6.29.5",
+]

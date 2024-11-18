@@ -38,8 +38,8 @@ services:
       - spark-master
     environment:
       SPARK_MODE: worker
-      SPARK_WORKER_CORES: 2
-      SPARK_WORKER_MEMORY: 3g
+      SPARK_WORKER_CORES: 6
+      SPARK_WORKER_MEMORY: 12g
       SPARK_MASTER_URL: spark://spark-master:7077
 
   postgres:

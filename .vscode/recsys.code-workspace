@@ -1,0 +1,26 @@
+{
+    "folders": [
+        {
+            "name": "root",
+            "path": ".."
+        },
+        {
+            "name": "services/recsys-orchestration",
+            "path": "../services/recsys-orchestration"
+        },
+        {
+            "name": "services/recsys-streaming",
+            "path": "../services/recsys-streaming"
+        },
+        {
+            "name": "packages/recsys-streaming-ml",
+            "path": "../packages/recsys-streaming-ml"
+        }
+    ],
+    "settings": {
+        "files.exclude": {
+            "services/": true,
+            "packages/": true
+        }
+    }
+}
