@@ -19,8 +19,8 @@
     ],
     "settings": {
         "files.exclude": {
-            "services/": true,
-            "packages/": true
+            "services/**": true,
+            "packages/**": true
         }
     }
 }

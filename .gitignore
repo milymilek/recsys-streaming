@@ -1,7 +1,47 @@
-.mongo
-.redis
-.kafka
-.datalake
-airflow.env
-.venv/
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Distribution / packaging
+dist/
+
+# Jetbrains
+.idea/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# pyenv
+.python-version
+
+# Environments
+.env
+env/
+*.env
+
+# Virtual environments
+.venv*/
+
+# MacOS
 .DS_Store
+
+# Data
+data
+.data
+.datalake
+
+# Ruff
+.ruff_cache/
+
+# Kafka
+.kafka
+
+# Redis
+.redis
+
+# Mongo
+.mongo
+
+# Airflow
+logs/

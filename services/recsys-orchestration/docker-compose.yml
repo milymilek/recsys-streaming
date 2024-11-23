@@ -1,12 +1,15 @@
 version: '3'
 
 x-spark-common: &spark-common
-  image: bitnami/spark:3.4.2
+  image: bitnami/spark:3.5.3
   volumes:
     - .datalake:/opt/bitnami/spark/.datalake
-    - ./jobs:/opt/bitnami/spark/jobs
+    - jobs:/opt/bitnami/spark/jobs
   networks:
-    - code-with-yu
+    - recsys-streaming-net
+  environment:
+    - SPARK_SUBMIT_ARGS=--packages io.delta:delta-core_2.12:2.4.0
+  user: root
 
 x-airflow-common: &airflow-common
   build:
@@ -16,13 +19,13 @@ x-airflow-common: &airflow-common
     - airflow.env
   volumes:
     - .datalake:/opt/airflow/.datalake
-    - ./jobs:/opt/airflow/jobs
-    - ./dags:/opt/airflow/dags
-    - ./logs:/opt/airflow/logs
+    - jobs:/opt/airflow/jobs
+    - dags:/opt/airflow/dags
+    - logs:/opt/airflow/logs
   depends_on:
     - postgres
   networks:
-    - code-with-yu
+    - recsys-streaming-net
 
 services:
   spark-master:
@@ -50,7 +53,7 @@ services:
       - POSTGRES_PASSWORD=airflow
       - POSTGRES_DB=airflow
     networks:
-      - code-with-yu
+      - recsys-streaming-net
 
   webserver:
     <<: *airflow-common
@@ -65,4 +68,4 @@ services:
     command: bash -c "airflow db migrate && airflow users create --username admin --firstname Bart --lastname Marszalek --role Admin --email bartosz.j.marszalek@gmail.com --password admin && airflow scheduler"
 
 networks:
-  code-with-yu:
+  recsys-streaming-net:
