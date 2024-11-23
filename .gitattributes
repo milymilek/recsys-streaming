@@ -1,2 +1,2 @@
 # Ignore Jupyter Notebooks for language statistics
-# *.ipynb linguist-vendored=true
+*.ipynb linguist-vendored=true
