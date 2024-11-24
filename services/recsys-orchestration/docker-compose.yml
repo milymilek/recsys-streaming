@@ -65,7 +65,7 @@ services:
 
   scheduler:
     <<: *airflow-common
-    command: bash -c "airflow db migrate && airflow users create --username admin --firstname Bart --lastname Marszalek --role Admin --email bartosz.j.marszalek@gmail.com --password admin && airflow scheduler"
+    command: bash -c "airflow db migrate && airflow users create --username admin --firstname Recsys --lastname Streaming --role Admin --email recsys@streaming.com --password admin && airflow scheduler"
 
 networks:
   recsys-streaming-net:

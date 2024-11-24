@@ -9,6 +9,10 @@
             "path": "../services/recsys-orchestration"
         },
         {
+            "name": "services/recsys-lakehouse",
+            "path": "../services/recsys-lakehouse"
+        },
+        {
             "name": "services/recsys-streaming",
             "path": "../services/recsys-streaming"
         },
