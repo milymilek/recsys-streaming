@@ -4,7 +4,21 @@ from abc import ABC, abstractmethod
 from enum import Enum
 from pathlib import Path
 
+from pyspark.sql import SparkSession
+
 from recsys_lakehouse.lakehouse.raw_data_source import RawDataSource
+
+
+class Table:
+    def __init__(self, df):
+        self._df = df
+
+    @property
+    def schema(self): ...
+
+    @abstractmethod
+    def partition_by(self, output_dir: Path):
+        pass
 
 
 class Layer(ABC):
@@ -35,6 +49,12 @@ class Raw(Layer):
     def path(self) -> Path:
         return self.base_path / self._path
 
+    def get_files(self):
+        expected_files = self._source.expected_files
+        files = list(self.path.iterdir())
+        assert all(file.name in expected_files for file in files), f"Missing files: {expected_files}"
+        return files
+
 
 class Bronze(Layer):
     def __init__(self, path: Path):
@@ -51,37 +71,37 @@ class Bronze(Layer):
 
 
 class Silver(Layer):
-    pass
+    def __init__(self, path: Path, spark: SparkSession):
+        super().__init__()
+        self._path = path
+        self._spark = spark
+
+    @property
+    def layer_path(self) -> Path:
+        return Path("silver")
+
+    @property
+    def path(self) -> Path:
+        return self.base_path / self._path
+
+    def write_table(self, df, table: Table):
+        columns_in_schema = [field.name for field in table.schema.fields]
+        df_s = df.select(*columns_in_schema)
+
+        df_enforced_schema = self._spark.createDataFrame(df_s.rdd, table.schema)
+        df_enforced_schema.write.mode("overwrite").parquet(str(self.path / table.table_name))
 
 
 class Gold(Layer):
     pass
 
 
-class LayerOperator:
-    def __init__(self, read_layer: Layer, write_layer: Layer, raw="raw"):
-        self._raw = raw
-        self._read_layer = read_layer
-        self._write_layer = write_layer
+class TableFactory:
+    @staticmethod
+    def get_table_object(df, table_name: str, table_mapping: dict[str, type[Table]]) -> Table:
+        c = table_mapping.get(table_name)
 
-    @property
-    def base_path(self) -> Path:
-        return Path(".datalake")
+        if c is None:
+            raise ValueError(f"Table {table_name} not found.")
 
-    def read_files(self) -> list[Path]:
-        return list((self.base_path / self._raw).iterdir())
-
-    def read_path(self, file_name: str) -> Path:
-        return self.base_path / self._read_layer.value / file_name
-
-    def write_path(self, file_name: str) -> Path:
-        return self.base_path / self._write_layer.value / f"amazon_books/data_source=http_github/{file_name}"
-
-
-class Table:
-    def __init__(self, df):
-        self._df = df
-
-    @abstractmethod
-    def partition_by(self, output_dir: Path):
-        pass
+        return c(df)

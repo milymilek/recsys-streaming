@@ -1,142 +1,66 @@
+import argparse
 import logging
 import os
-from abc import abstractmethod
-from enum import Enum
+from dataclasses import dataclass
 from pathlib import Path
 
 from pyspark.sql import SparkSession
+from pyspark.sql.dataframe import DataFrame
 from pyspark.sql.functions import col, date_format, from_unixtime
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+from recsys_lakehouse.lakehouse import layers, raw_data_source, silver
+from recsys_lakehouse.lakehouse.bronze import bronze_table_mapping
+from recsys_lakehouse.spark import spark_builder
+from recsys_lakehouse.utils import log_wrapper
 
 
-class Layers(str, Enum):
-    RAW = "raw"
-    BRONZE = "bronze"
-    SILVER = "silver"
-    GOLD = "gold"
+@dataclass
+class LayerConfig:
+    app_name: str
+    error_log_level: str
+    dataset_name: str
 
 
-class LayerOperator:
-    def __init__(self, read_layer: Layers, write_layer: Layers, raw="raw"):
-        self._raw = raw
-        self._read_layer = read_layer
-        self._write_layer = write_layer
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Silver Layer Configuration")
+    parser.add_argument("--app_name", type=str, default="Silver Layer - Normalization")
+    parser.add_argument("--error_log_level", type=str, default="ERROR")
+    parser.add_argument("--dataset_name", type=str, required=False, default="amazon_books_sample10000")
+    args = parser.parse_args()
 
-    @property
-    def base_path(self) -> Path:
-        return Path(".datalake")
-
-    def read_files(self) -> list[Path]:
-        return list((self.base_path / self._raw).iterdir())
-
-    def read_path(self, file_name: str) -> Path:
-        return self.base_path / self._read_layer.value / f"amazon_books/data_source=http_github/{file_name}"
-
-    def write_path(self, file_name: str) -> Path:
-        return self.base_path / self._write_layer.value / f"amazon_books/data_source=http_github/{file_name}"
+    return args
 
 
-class Table:
-    def __init__(self, df):
-        self._df = df
-
-    @abstractmethod
-    def partition_by(self, output_dir: Path):
-        pass
-
-
-class BooksTable(Table):
-    partition_col = "date"
-
-    def partition_by(self, output_dir: Path):
-        self._df = self._df.withColumn(self.partition_col, date_format(from_unixtime(col("timestamp") / 1000), "yyyy-MM"))
-        self._df.write.mode("overwrite").partitionBy(self.partition_col).parquet(str(output_dir))
+args = parse_args()
+config = LayerConfig(
+    app_name=args.app_name,
+    error_log_level=args.error_log_level,
+    dataset_name=args.dataset_name,
+)
 
 
-class MetaBooksTable(Table):
-    partition_col = "main_category"
-
-    def partition_by(self, output_dir: Path):
-        self._df.write.mode("overwrite").partitionBy(self.partition_col).parquet(str(output_dir))
+@log_wrapper(enter="Loading table...", exit="Table loaded.")
+def load_table(spark: SparkSession, table_path: Path, table_name: str) -> DataFrame:
+    return spark.read.parquet(str(table_path / table_name))
 
 
-class TableFactory:
-    @staticmethod
-    def get_table_object(df, table_name: str) -> Table:
-        table_classes = {
-            "Books": BooksTable,
-            "meta_Books": MetaBooksTable,
-        }
-        c = table_classes.get(table_name)
+@log_wrapper(enter="Starting ingestion to bronze layer.", exit="Bronze layer ingestion completed successfully.")
+def main(spark: SparkSession):
+    bronze_layer = layers.Bronze(path=Path(config.dataset_name))
+    silver_layer = layers.Silver(path=Path(config.dataset_name), spark=spark)
 
-        if c is None:
-            raise ValueError(f"Table {table_name} not found.")
+    # for raw batch data
+    for table_name in bronze_table_mapping.keys():
+        print(table_name)
 
-        return c(df)
+        df = load_table(spark, bronze_layer.path, table_name)
+        df.show()
 
-
-spark = SparkSession.builder.appName("Bronze Layer Ingestion").config("spark.sql.parquet.compression.codec", "snappy").getOrCreate()  # type: ignore
-
-
-def load_json_to_spark(file_path: Path):
-    """
-    Load JSON data into a Spark DataFrame.
-    """
-    logging.info(f"Loading JSON data from {str(file_path)} into Spark DataFrame...")
-
-    df = spark.read.json(str(file_path))
-    df.printSchema()
-
-    logging.info("Data loaded into Spark DataFrame.")
-    return df
-
-
-def create_partition_column(df):
-    """
-    Create a new column for partitioning the data.
-    """
-    logging.info(f"Creating partition column date...")
-
-    df = df.withColumn("date", date_format(from_unixtime(col("timestamp") / 1000), "yyyy-MM"))
-
-    logging.info(f"Partition column date created.")
-    return df
-
-
-def save_partitioned_data(df, partition_column: str, output_dir: Path):
-    """
-    Save Spark DataFrame as partitioned Parquet files.
-    """
-    logging.info(f"Saving data partitioned by {partition_column} to {output_dir}...")
-
-    df.write.mode("overwrite").partitionBy(partition_column).parquet(str(output_dir))
-
-    logging.info(f"Data saved to {output_dir} in partitioned format.")
-
-
-def main():
-    logging.info(f"\n\n\n {'='*5}Starting normalization.{'='*5}\n\n\n")
-
-    kwargs = {}
-    if os.getenv("RAW_PATH") is not None:
-        kwargs = {"raw": os.environ["RAW_PATH"]}
-
-    operator = LayerOperator(read_layer=Layers.RAW, write_layer=Layers.BRONZE, **kwargs)
-
-    files = operator.read_files()
-
-    for file in files:
-        logging.info(f"Reading file {file}...")
-
-        df = load_json_to_spark(file)
-
-        table = TableFactory.get_table_object(df, file.stem)
-        table.partition_by(output_dir=operator.write_path(file.stem))
-
-    logging.info(f"\n\n\n {'='*5}Ingestion completed successfully.{'='*5}\n\n\n")
+        table = {"books": silver.BooksReviewsTable, "meta_books": silver.BooksMetadataTable}[table_name](df)
+        table.process()
+        silver_layer.write_table(table._df, table)
 
 
 if __name__ == "__main__":
-    main()
-    spark.stop()
+    with spark_builder(config.app_name, config.error_log_level) as spark:
+        main(spark)

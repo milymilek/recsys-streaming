@@ -6,9 +6,9 @@ from pathlib import Path
 
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col, date_format, from_unixtime
-from recsys_lakehouse.lakehouse.bronze import TableFactory
-from recsys_lakehouse.lakehouse import layers
-from recsys_lakehouse.lakehouse.raw_data_source import JSONDataSource, RawDataSource, StreamDataSource
+
+from recsys_lakehouse.lakehouse import layers, raw_data_source
+from recsys_lakehouse.lakehouse.bronze import bronze_table_mapping
 from recsys_lakehouse.spark import spark_builder
 from recsys_lakehouse.utils import log_wrapper
 
@@ -18,30 +18,31 @@ class LayerConfig:
     app_name: str
     error_log_level: str
     _raw_data_source: str
-    raw_data_path: str
+    dataset_name: str
 
     @property
-    def raw_data_source(self) -> type[JSONDataSource] | type[StreamDataSource]:
-        return JSONDataSource if self.raw_data_source == "JSONDataSource" else StreamDataSource  # type: ignore
+    def raw_data_source(self):
+        return getattr(raw_data_source, self._raw_data_source)
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Bronze Layer Ingestion Configuration")
-    parser.add_argument("--app_name", type=str, default="Bronze Layer Ingestion")
+    parser = argparse.ArgumentParser(description="Bronze Layer Configuration")
+    parser.add_argument("--app_name", type=str, default="Bronze Layer - Ingestion")
     parser.add_argument("--error_log_level", type=str, default="ERROR")
     parser.add_argument("--raw_data_source", type=str, default="JSONDataSource")
-    parser.add_argument("--raw_data_path", type=str, required=False, default="raw/amazon_books")
+    parser.add_argument("--dataset_name", type=str, required=False, default="amazon_books_sample10000")
     args = parser.parse_args()
 
     return args
 
+
 args = parse_args()
 config = LayerConfig(
-        app_name=args.app_name,
-        error_log_level=args.error_log_level,
-        _raw_data_source=args.raw_data_sources,
-        raw_data_path=args.raw_data_path,
-    )
+    app_name=args.app_name,
+    error_log_level=args.error_log_level,
+    _raw_data_source=args.raw_data_source,
+    dataset_name=args.dataset_name,
+)
 
 
 @log_wrapper(enter="Loading JSON data into Spark DataFrame...", exit="Data loaded into Spark DataFrame.")
@@ -71,23 +72,17 @@ def save_partitioned_data(df, partition_column: str, output_dir: Path):
 @log_wrapper(enter="Starting ingestion to bronze layer.", exit="Bronze layer ingestion completed successfully.")
 def main(spark: SparkSession):
     raw_data_source = config.raw_data_source(spark)
-    raw_layer = layers.Raw(source=raw_data_source, path=Path("amazon_books_sample10000"))
-    bronze_layer = layers.Bronze(path=Path("amazon_books_sample10000"))
-    # operator = LayerOperator(read_layer=Layers.RAW, write_layer=Layers.BRONZE)
+    raw_layer = layers.Raw(source=raw_data_source, path=Path(config.dataset_name))
+    bronze_layer = layers.Bronze(path=Path(config.dataset_name))
 
-    # files = operator.read_files()
+    # for raw batch data
+    for filepath in raw_layer.get_files():
+        logging.info(f"Reading file {filepath}...")
+        print(filepath)
 
-    print(files)
-
-    for filename in config.raw_data_files:
-        raw_data_file_path = operator.
-        raw_data_source = config.raw_data_source(spark, file)
-        logging.info(f"Reading file {file}...")
-
-        df = load_json_to_spark(spark, file)
-
-        table = TableFactory.get_table_object(df, file.stem)
-        table.partition_by(output_dir=operator.write_path(file.stem))
+        df = load_json_to_spark(spark, filepath)
+        table = layers.TableFactory.get_table_object(df, filepath.stem.lower(), bronze_table_mapping)
+        table.partition_by(output_dir=bronze_layer.path)
 
 
 if __name__ == "__main__":

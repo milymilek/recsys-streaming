@@ -13,6 +13,11 @@ class RawDataSource(ABC):
     def read(self) -> Any:
         pass
 
+    @property
+    @abstractmethod
+    def expected_files(self) -> Any:
+        pass
+
 
 class JSONDataSource(RawDataSource):
     def __init__(self, spark: SparkSession):
@@ -20,6 +25,10 @@ class JSONDataSource(RawDataSource):
 
     def read(self) -> Any:
         return self.spark.read.json(str(None))
+
+    @property
+    def expected_files(self):
+        return ["Books.jsonl", "meta_Books.jsonl"]
 
 
 class StreamDataSource(RawDataSource):
