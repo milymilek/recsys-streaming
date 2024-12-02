@@ -1,28 +1,26 @@
 import argparse
 import logging
-import os
 from dataclasses import dataclass
 from pathlib import Path
 
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import col, date_format, from_unixtime
 
-from recsys_lakehouse.lakehouse import layers, raw_data_source
-from recsys_lakehouse.lakehouse.bronze import bronze_table_mapping
+from recsys_lakehouse.lakehouse import layers
+from recsys_lakehouse.lakehouse.operator import TableOperator
+from recsys_lakehouse.lakehouse.raw_data_source import JSONDataSource, StreamDataSource
 from recsys_lakehouse.spark import spark_builder
 from recsys_lakehouse.utils import log_wrapper
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 
 @dataclass
 class LayerConfig:
     app_name: str
     error_log_level: str
-    _raw_data_source: str
+    raw_data_source: str
     dataset_name: str
-
-    @property
-    def raw_data_source(self):
-        return getattr(raw_data_source, self._raw_data_source)
 
 
 def parse_args() -> argparse.Namespace:
@@ -36,55 +34,39 @@ def parse_args() -> argparse.Namespace:
     return args
 
 
-args = parse_args()
-config = LayerConfig(
-    app_name=args.app_name,
-    error_log_level=args.error_log_level,
-    _raw_data_source=args.raw_data_source,
-    dataset_name=args.dataset_name,
-)
-
-
-@log_wrapper(enter="Loading JSON data into Spark DataFrame...", exit="Data loaded into Spark DataFrame.")
-def load_json_to_spark(spark: SparkSession, file_path: Path):
-    """Load JSON data into a Spark DataFrame."""
-
-    df = spark.read.json(str(file_path))
-    df.printSchema()
-    return df
-
-
-@log_wrapper(enter="Creating partition column date...", exit="Partition column date created.")
-def create_partition_column(df):
-    """Create a new column for partitioning the data."""
-
-    df = df.withColumn("date", date_format(from_unixtime(col("timestamp") / 1000), "yyyy-MM"))
-    return df
-
-
-@log_wrapper(enter="Saving partitioned data...", exit="Partitioned data saved.")
-def save_partitioned_data(df, partition_column: str, output_dir: Path):
-    """Save Spark DataFrame as partitioned Parquet files."""
-
-    df.write.mode("overwrite").partitionBy(partition_column).parquet(str(output_dir))
-
-
 @log_wrapper(enter="Starting ingestion to bronze layer.", exit="Bronze layer ingestion completed successfully.")
-def main(spark: SparkSession):
-    raw_data_source = config.raw_data_source(spark)
-    raw_layer = layers.Raw(source=raw_data_source, path=Path(config.dataset_name))
-    bronze_layer = layers.Bronze(path=Path(config.dataset_name))
+def main(spark: SparkSession, config: LayerConfig) -> None:
+    if config.raw_data_source == "JSONDataSource":
+        raw_data_source = JSONDataSource(
+            base_path=Path(f".datalake/raw/{config.dataset_name}"),
+            tables={"books_reviews": "Books.jsonl", "books_metadata": "meta_Books.jsonl"},
+            spark=spark,
+        )
+    elif config.raw_data_source == "StreamDataSource":
+        raw_data_source = StreamDataSource(tables={"books_reviews": ""}, spark=spark)
+    else:
+        raise ValueError(f"Unknown raw data source: {config.raw_data_source}")
 
-    # for raw batch data
-    for filepath in raw_layer.get_files():
-        logging.info(f"Reading file {filepath}...")
-        print(filepath)
+    raw_layer = layers.Raw(source=raw_data_source, dataset_name=config.dataset_name)
+    bronze_layer = layers.Bronze(dataset_name=config.dataset_name)
+    operator = TableOperator(spark)
 
-        df = load_json_to_spark(spark, filepath)
-        table = layers.TableFactory.get_table_object(df, filepath.stem.lower(), bronze_table_mapping)
-        table.partition_by(output_dir=bronze_layer.path)
+    for table_name, df in raw_layer.read_source().items():
+        logger.info("Reading `%s`...", table_name)
+
+        table = bronze_layer.tables[table_name]
+        df_table = table.process(df)
+        operator.write_table(df_table, table, bronze_layer)
 
 
 if __name__ == "__main__":
+    args = parse_args()
+    config = LayerConfig(
+        app_name=args.app_name,
+        error_log_level=args.error_log_level,
+        raw_data_source=args.raw_data_source,
+        dataset_name=args.dataset_name,
+    )
+
     with spark_builder(config.app_name, config.error_log_level) as spark:
-        main(spark)
+        main(spark, config)

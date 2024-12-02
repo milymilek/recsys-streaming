@@ -1,25 +1,24 @@
-from pathlib import Path
+from dataclasses import dataclass
 
+from pyspark.sql import DataFrame
 from pyspark.sql.functions import col, date_format, from_unixtime
 
-from recsys_lakehouse.lakehouse.layers import Table
+from recsys_lakehouse.lakehouse.table import Table
 
 
-class BooksTable(Table):
-    table_name = "books"
-    partition_col = "date"
+@dataclass
+class BooksReviewsTable(Table):
+    table_name: str = "books_reviews"
+    partition_col: str = "date_month"
 
-    def partition_by(self, output_dir: Path):
-        self._df = self._df.withColumn(self.partition_col, date_format(from_unixtime(col("timestamp") / 1000), "yyyy-MM"))
-        self._df.write.mode("overwrite").partitionBy(self.partition_col).parquet(str(output_dir / self.table_name))
-
-
-class MetaBooksTable(Table):
-    table_name = "meta_books"
-    partition_col = "main_category"
-
-    def partition_by(self, output_dir: Path):
-        self._df.write.mode("overwrite").partitionBy(self.partition_col).parquet(str(output_dir / self.table_name))
+    def process(self, df: DataFrame) -> DataFrame:
+        return df.withColumn(self.partition_col, date_format(from_unixtime(col("timestamp") / 1000), "yyyy-MM"))
 
 
-bronze_table_mapping = {BooksTable.table_name: BooksTable, MetaBooksTable.table_name: MetaBooksTable}
+@dataclass
+class BooksMetadataTable(Table):
+    table_name: str = "books_metadata"
+    partition_col: str = "main_category"
+
+
+bronze_table_mapping = {BooksReviewsTable.table_name: BooksReviewsTable(), BooksMetadataTable.table_name: BooksMetadataTable()}
