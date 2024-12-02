@@ -14,7 +14,13 @@ class TableOperator:
         return layer.path / table.table_name
 
     def read_table(self, layer: Layer, table: Table) -> DataFrame:
-        return self._spark.read.parquet(str(self._table_path(layer, table)))
+        read_table = self._spark.read
+        if table.schema is not None:
+            read_table = read_table.schema(table.schema)
+        return read_table.parquet(str(self._table_path(layer, table)))
 
     def write_table(self, df: DataFrame, table: Table, layer: Layer) -> None:
-        df.write.mode("overwrite").partitionBy(table.partition_col).parquet(str(self._table_path(layer, table)))
+        write_fn = df.write.mode("overwrite")
+        if table.partition_col:
+            write_fn = write_fn.partitionBy(table.partition_col)
+        write_fn.parquet(str(self._table_path(layer, table)))

@@ -69,12 +69,30 @@ class BooksMetadataTable(Table):
                 StructField("main_category", StringType(), False),
                 StructField("title", StringType(), False),
                 StructField("subtitle", StringType(), False),
+                StructField("description", ArrayType(StringType()), False),
                 StructField("categories", ArrayType(StringType()), False),
                 StructField("price", FloatType(), False),
                 StructField("average_rating", FloatType(), False),
                 StructField("rating_number", LongType(), False),
+                StructField(
+                    "images",
+                    ArrayType(
+                        StructType(
+                            [
+                                StructField("hi_res", StringType(), True),
+                                StructField("large", StringType(), True),
+                                StructField("thumb", StringType(), True),
+                                StructField("variant", StringType(), True),
+                            ]
+                        )
+                    ),
+                    False,
+                ),
             ]
         )
+
+    def _cast_types(self, df: DataFrame) -> DataFrame:
+        return df.withColumn("price", col("price").cast(FloatType())).withColumn("average_rating", col("average_rating").cast(FloatType()))
 
     def _filter(self, df: DataFrame) -> DataFrame:
         return df.filter(col("parent_asin").isNotNull()).filter(col("average_rating") <= 5.0).filter(col("average_rating") >= 1.0)
@@ -84,7 +102,8 @@ class BooksMetadataTable(Table):
 
     def process(self, df: DataFrame) -> DataFrame:
         books_metadata_filtered = self._filter(df)
-        return self._only_schema_cols(books_metadata_filtered)
+        books_metadata_casted = self._cast_types(books_metadata_filtered)
+        return self._only_schema_cols(books_metadata_casted)
 
 
 silver_table_mapping = {BooksReviewsTable.table_name: BooksReviewsTable(), BooksMetadataTable.table_name: BooksMetadataTable()}

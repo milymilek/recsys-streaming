@@ -33,11 +33,6 @@ def parse_args() -> argparse.Namespace:
     return args
 
 
-@log_wrapper(enter="Loading table...", exit="Table loaded.")
-def load_table(spark: SparkSession, table_path: Path, table_name: str) -> DataFrame:
-    return spark.read.parquet(str(table_path / table_name))
-
-
 @log_wrapper(enter="Starting ingestion to bronze layer.", exit="Bronze layer ingestion completed successfully.")
 def main(spark: SparkSession, config: LayerConfig) -> None:
     bronze_layer = layers.Bronze(dataset_name=config.dataset_name)

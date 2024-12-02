@@ -33,27 +33,24 @@ def parse_args() -> argparse.Namespace:
     return args
 
 
-@log_wrapper(enter="Loading table...", exit="Table loaded.")
-def load_table(spark: SparkSession, table_path: Path, table_name: str) -> DataFrame:
-    return spark.read.parquet(str(table_path / table_name))
-
-
 @log_wrapper(enter="Starting ingestion to bronze layer.", exit="Bronze layer ingestion completed successfully.")
 def main(spark: SparkSession, config: LayerConfig) -> None:
     silver_layer = layers.Silver(dataset_name=config.dataset_name)
-    silver_layer = layers.Gold(dataset_name=config.dataset_name)
+    gold_layer = layers.Gold(dataset_name=config.dataset_name)
     operator = TableOperator(spark)
 
+    silver_layer_dfs = {}
     for table_name, bronze_table in silver_layer.tables.items():
         logger.info("Reading table `%s` from silver layer.", table_name)
-        df = operator.read_table(silver_layer, bronze_table)
-        df.show()
+        silver_layer_dfs[table_name] = operator.read_table(silver_layer, bronze_table)
+        silver_layer_dfs[table_name].show()
 
-        silver_table = silver_layer.tables[table_name]
-        df_table = silver_table.process(df)
+    for table_name, gold_table in gold_layer.tables.items():
+        factor_tables = {k: v for k, v in silver_layer_dfs.items() if k in gold_table.parent_tables}
+        df_table = gold_table.process(factor_tables)
 
         logger.info("Writing table `%s` to gold layer.", table_name)
-        operator.write_table(df_table, silver_table, silver_layer)
+        operator.write_table(df_table, gold_table, gold_layer)
 
 
 if __name__ == "__main__":
