@@ -1,27 +1,25 @@
-version: '3'
-
 x-spark-common: &spark-common
-  image: bitnami/spark:3.5.3
-  volumes:
-    - .datalake:/opt/bitnami/spark/.datalake
-    - jobs:/opt/bitnami/spark/jobs
-  networks:
-    - recsys-streaming-net
+  build:
+    context: services/recsys-lakehouse
+    dockerfile: Dockerfile
   environment:
     - SPARK_SUBMIT_ARGS=--packages io.delta:delta-core_2.12:2.4.0
-  user: root
+  volumes:
+    - ./services/recsys-lakehouse/.datalake:/opt/bitnami/spark/.datalake
+    - ./services/recsys-lakehouse/recsys_lakehouse:/opt/bitnami/spark/recsys_lakehouse
+  networks:
+    - recsys-streaming-net
 
 x-airflow-common: &airflow-common
   build:
-    context: .
+    context: services/recsys-orchestration
     dockerfile: Dockerfile
   env_file:
-    - airflow.env
+    - services/recsys-orchestration/airflow.env
   volumes:
-    - .datalake:/opt/airflow/.datalake
-    - jobs:/opt/airflow/jobs
-    - dags:/opt/airflow/dags
-    - logs:/opt/airflow/logs
+    - ./services/recsys-orchestration/dags:/opt/airflow/dags
+    - ./services/recsys-orchestration/logs:/opt/airflow/logs
+    - ./services/recsys-lakehouse/recsys_lakehouse:/opt/airflow/recsys_lakehouse
   depends_on:
     - postgres
   networks:

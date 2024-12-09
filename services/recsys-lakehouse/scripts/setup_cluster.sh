@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -euo pipefail
+
 # Defaults
 WORKERS=1
 WORKER_RAM_POOL=12

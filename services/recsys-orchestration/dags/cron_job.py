@@ -9,7 +9,9 @@ dag = DAG(dag_id="dummy_cron_job", default_args={"owner": "MH", "start_date": da
 
 start = PythonOperator(task_id="start", python_callable=lambda: print("Jobs started"), dag=dag)
 
-python_job = SparkSubmitOperator(task_id="counter", conn_id="spark-conn", application="jobs/python/dummy_count_job.py", dag=dag)
+python_job = SparkSubmitOperator(
+    task_id="counter", conn_id="spark-conn", application="recsys_lakehouse/jobs/python/dummy_count_job.py", dag=dag
+)
 
 end = PythonOperator(task_id="end", python_callable=lambda: print("Jobs completed successfully"), dag=dag)
 
