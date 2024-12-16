@@ -12,3 +12,7 @@ dependencies = [
 dev = [
     "ipykernel>=6.29.5",
 ]
+
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"

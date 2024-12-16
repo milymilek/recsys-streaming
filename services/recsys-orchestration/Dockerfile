@@ -13,5 +13,8 @@ ENV JAVA_HOME="/usr/lib/jvm/java-17-openjdk-arm64"
 
 USER airflow
 
-COPY pyproject.toml pyproject.toml
-RUN uv pip install -r pyproject.toml
+COPY ./dist/recsys_lakehouse-0.1.0-py3-none-any.whl /opt/airflow
+
+COPY pyproject.toml /opt/airflow/pyproject.toml
+RUN uv pip install -r /opt/airflow/pyproject.toml && \
+    pip install /opt/airflow/recsys_lakehouse-0.1.0-py3-none-any.whl
