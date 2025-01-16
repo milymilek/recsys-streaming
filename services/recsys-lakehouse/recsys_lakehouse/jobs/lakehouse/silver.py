@@ -8,7 +8,7 @@ from pyspark.sql.dataframe import DataFrame
 
 from recsys_lakehouse.lakehouse import layers
 from recsys_lakehouse.lakehouse.operator import TableOperator
-from recsys_lakehouse.lakehouse.silver import silver_table_mapping
+from recsys_lakehouse.lakehouse.silver.silver import silver_table_mapping
 from recsys_lakehouse.spark import spark_builder
 from recsys_lakehouse.utils import log_wrapper
 

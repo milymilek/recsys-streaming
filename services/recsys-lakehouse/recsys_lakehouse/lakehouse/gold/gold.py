@@ -5,7 +5,7 @@ from pyspark.sql import functions as F
 from pyspark.sql.functions import col, from_unixtime, to_timestamp
 from pyspark.sql.types import ArrayType, BooleanType, FloatType, LongType, StringType, StructField, StructType, TimestampType
 
-from recsys_lakehouse.lakehouse.silver import BooksMetadataTable, BooksReviewsTable
+from recsys_lakehouse.lakehouse.silver.silver import BooksMetadataTable, BooksReviewsTable
 from recsys_lakehouse.lakehouse.table import Table
 
 

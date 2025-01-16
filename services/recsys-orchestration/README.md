@@ -1,0 +1,6 @@
+- najczesciej kupowane itemy
+- najczesciej kupowane itemy per grupa
+- outliery? 
+- itemy z najwieksza roznica ceny w (najwczesnijeszym zakupie - najpozniejszym zakupie) / liczba dni  -> najszybszy spadek ceny
+- klienci premium (wydane wiecej niz 99%?)
+- 

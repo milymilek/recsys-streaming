@@ -8,8 +8,9 @@ from pyspark.sql import SparkSession
 from pyspark.sql.dataframe import DataFrame
 from pyspark.sql.functions import col, date_format, from_unixtime
 
-from recsys_lakehouse.lakehouse import layers, raw_data_source, silver
-from recsys_lakehouse.lakehouse.bronze import bronze_table_mapping
+from recsys_lakehouse.lakehouse import layers, raw_data_source
+from recsys_lakehouse.lakehouse.bronze.bronze import bronze_table_mapping
+from recsys_lakehouse.lakehouse.silver import silver
 from recsys_lakehouse.spark import spark_builder
 from recsys_lakehouse.utils import log_wrapper
 

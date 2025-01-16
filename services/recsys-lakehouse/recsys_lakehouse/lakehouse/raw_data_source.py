@@ -10,7 +10,7 @@ class RawDataSource(ABC):
         self.spark = spark
 
     @abstractmethod
-    def read(self) -> dict[str, Any]:
+    def read(self, table):
         pass
 
 
@@ -28,8 +28,8 @@ class JSONDataSource(RawDataSource):
         # assert not missing_files, f"Missing files: {missing_files}"
         ...
 
-    def read(self) -> dict[str, Any]:
-        return {table: self.spark.read.json(str(self._base_path / file)) for table, file in self._tables.items()}
+    def read(self, table):
+        return self.spark.read.json(str(self._base_path / self._tables[table]))
 
     @property
     def files(self) -> list[str]:
@@ -41,5 +41,5 @@ class StreamDataSource(RawDataSource):
         super().__init__(spark)
         self._tables = tables
 
-    def read(self) -> Any:
+    def read(self, table):
         return {table: self.spark.readStream.format("rate").load() for table, stream in self._tables.items()}

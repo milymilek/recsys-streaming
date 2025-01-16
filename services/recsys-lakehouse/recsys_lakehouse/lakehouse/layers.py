@@ -3,8 +3,10 @@ from pathlib import Path
 
 from pyspark.sql import DataFrame
 
-from recsys_lakehouse.lakehouse import bronze, gold, silver
+from recsys_lakehouse.lakehouse.bronze import bronze
+from recsys_lakehouse.lakehouse.gold import gold
 from recsys_lakehouse.lakehouse.raw_data_source import RawDataSource
+from recsys_lakehouse.lakehouse.silver import silver
 from recsys_lakehouse.lakehouse.table import Table
 
 
@@ -36,8 +38,8 @@ class Raw(Layer):
     def layer_path(self) -> Path:
         return Path("raw")
 
-    def read_source(self) -> dict[str, DataFrame]:
-        return self._source.read()
+    def read_source(self, table):
+        return self._source.read(table)
 
 
 class Bronze(Layer):

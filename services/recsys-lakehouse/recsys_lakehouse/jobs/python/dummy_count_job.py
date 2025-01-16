@@ -8,4 +8,8 @@ distData = spark.sparkContext.parallelize(data)
 count = distData.count()
 print(f"count: {count}")
 
+df = spark.read.json("xd.jsonl")
+print(df)
+
+
 spark.stop()
