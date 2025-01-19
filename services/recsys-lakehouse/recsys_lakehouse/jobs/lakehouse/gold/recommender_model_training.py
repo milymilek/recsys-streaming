@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime
 from pathlib import Path
 
 from pyspark.ml.evaluation import RegressionEvaluator
@@ -45,7 +46,7 @@ def evaluate(model, df, evaluator):
 
 
 def save_model_to_registry(model, model_registry_path: str):
-    model.save((Path(model_registry_path) / "als_model").as_posix())
+    model.save((Path(model_registry_path) / f"als_model/{datetime.now().strftime('%Y_%m_%d-%H_%M_%S')}").as_posix())
 
 
 @log_wrapper(enter="Starting recommender model training.", exit="Recommender model training completed successfully.")

@@ -18,6 +18,7 @@ def main(spark: SparkSession, config) -> None:
 
 if __name__ == "__main__":
     args = parse_args()
+    print(args)
     config = LayerConfig(
         app_name=args.app_name,
         error_log_level=args.error_log_level,

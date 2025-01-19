@@ -27,7 +27,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--app_name", type=str, default="Bronze Layer - Ingestion")
     parser.add_argument("--error_log_level", type=str, default="ERROR")
     parser.add_argument("--raw_data_source", type=str, default="JSONDataSource")
-    parser.add_argument("--dataset_name", type=str, required=False, default="amazon_books_sample10000")
+    parser.add_argument("--dataset_name", type=str, required=False, default="amazon_books_from_2023-06")
     args = parser.parse_args()
 
     return args
@@ -50,5 +50,6 @@ def read_process_write_table(spark: SparkSession, config, table_name: str) -> No
     bronze_layer = Bronze(dataset_name=config.dataset_name)
     books_reviews_bronze_table = bronze_layer.tables[table_name]
     books_reviews_bronze = books_reviews_bronze_table.process(books_reviews_raw)
+    books_reviews_bronze.show()
     operator = TableOperator(spark)
     operator.write_table(books_reviews_bronze, books_reviews_bronze_table, bronze_layer)

@@ -38,55 +38,24 @@ def parse_args() -> argparse.Namespace:
     return args
 
 
-def reviews_daily(reviews_table: DataFrame, cursor):
-    def reviews_daily_agg(reviews_table: DataFrame) -> DataFrame:
-        return (
-            reviews_table.withColumn("year_month_day", F.date_format("timestamp", "yyyy-MM-dd"))
-            .groupBy("year_month_day")
-            .count()
-            .sort("year_month_day")
-        )
+def item_features_mean(item_features_table: DataFrame, cursor, col):
+    def item_features_mean_agg(item_features_table: DataFrame, col: str) -> DataFrame:
+        return item_features_table.groupBy("main_category").agg(F.mean(col).alias(f"mean_{col}")).dropna().sort(f"mean_{col}")
 
-    reviews_daily_table = reviews_daily_agg(reviews_table)
-    create_table_query = """
-    CREATE TABLE IF NOT EXISTS reviews_daily (
-        year_month_day VARCHAR PRIMARY KEY,
-        count INTEGER
+    item_features_table_mean = item_features_mean_agg(item_features_table, col)
+    create_table_query = f"""
+    CREATE TABLE IF NOT EXISTS item_features_table_mean_{col} (
+        main_category VARCHAR PRIMARY KEY,
+        mean_{col} FLOAT
     )
     """
     cursor.execute(create_table_query)
 
-    clear_table_query = "TRUNCATE TABLE reviews_daily"
+    clear_table_query = f"TRUNCATE TABLE item_features_table_mean_{col}"
     cursor.execute(clear_table_query)
 
-    insert_query = "INSERT INTO reviews_daily (year_month_day, count) VALUES (%s, %s)"
-    data = reviews_daily_table.collect()
-    cursor.executemany(insert_query, data)
-
-
-def reviews_per_week(reviews_table: DataFrame, cursor):
-    def reviews_per_week_agg(reviews_table: DataFrame) -> DataFrame:
-        return (
-            reviews_table.withColumn("year_week", F.concat(F.year("timestamp"), F.lit("-"), F.weekofyear("timestamp")))
-            .groupBy("year_week")
-            .count()
-            .sort("year_week")
-        )
-
-    reviews_per_week_table = reviews_per_week_agg(reviews_table)
-    create_table_query = """
-    CREATE TABLE IF NOT EXISTS reviews_per_week (
-        year_week VARCHAR PRIMARY KEY,
-        count INTEGER
-    )
-    """
-    cursor.execute(create_table_query)
-
-    clear_table_query = "TRUNCATE TABLE reviews_per_week"
-    cursor.execute(clear_table_query)
-
-    insert_query = "INSERT INTO reviews_per_week (year_week, count) VALUES (%s, %s)"
-    data = reviews_per_week_table.collect()
+    insert_query = f"INSERT INTO item_features_table_mean_{col} (main_category, mean_{col}) VALUES (%s, %s)"
+    data = item_features_table_mean.collect()
     cursor.executemany(insert_query, data)
 
 
@@ -94,11 +63,11 @@ def reviews_per_week(reviews_table: DataFrame, cursor):
 def main(spark: SparkSession, config: LayerConfig) -> None:
     gold_layer = layers.Gold(dataset_name=config.dataset_name)
     operator = TableOperator(spark)
-    reviews_table = operator.read_table(gold_layer, gold_layer.tables["reviews"])
+    item_features_table = operator.read_table(gold_layer, gold_layer.tables["item_features"])
 
     with psql_conn() as cursor:
-        reviews_per_week(reviews_table, cursor)
-        reviews_daily(reviews_table, cursor)
+        item_features_mean(item_features_table, cursor, col="average_rating")
+        item_features_mean(item_features_table, cursor, col="price")
 
 
 if __name__ == "__main__":
