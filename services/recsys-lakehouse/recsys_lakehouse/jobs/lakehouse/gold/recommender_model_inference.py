@@ -20,7 +20,7 @@ logger.setLevel(logging.INFO)
 
 @log_wrapper(enter="Starting recommender model inference.", exit="Recommender model inference completed successfully.")
 def main(spark: SparkSession, config: LayerConfig) -> None:
-    model_path = ".datalake/model_registry/als_model"
+    model_path = ".datalake/model_registry/als_model/2025_01_27-15_49_48"
     als_model = ALSModel.load(model_path)
 
     user_df = spark.createDataFrame([(1,), (2,), (3,), (4,)], ["user_id"])
